@@ -1,0 +1,33 @@
+allprojects {
+    apply plugin : "maven-publish"
+    repositories {
+        mavenLocal()
+        maven {
+            url = 'https://maven.pkg.github.com/ballerina-platform/*'
+            credentials {
+                username System.getenv("packageUser")
+                password System.getenv("packagePAT")
+            }
+        }
+
+    }
+}
+
+
+task build {
+    dependsOn(":native:build")
+    dependsOn(":ballerina:build")
+
+}
+
+subprojects {
+    configurations {
+        ballerinaToolsPlugin
+    }
+    dependencies {
+        ballerinaToolsPlugin("org.ballerinalang:jballerina-tools:${ballerinaLangVersion}") {
+            transitive = false
+        }
+
+    }
+}
