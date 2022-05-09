@@ -15,11 +15,11 @@ public class Pipe {
     }
 
     public isolated function consume(decimal timeout, typedesc<any> typeParam = <>) returns typeParam|error = @java:Method {
-        'class: "channel.Pipe"
+        'class: "pipe.Pipe"
     } external;
 
     public isolated function consumeStream(decimal timeout, typedesc<any> typeParam = <>) returns stream<typeParam,error?> = @java:Method {
-        'class: "channel.Pipe"
+        'class: "pipe.Pipe"
     } external;
 
     public isolated function immediateStop() {
@@ -36,21 +36,21 @@ public class Pipe {
 }
 
 function newPipe(int 'limit) returns handle = @java:Constructor {
-    'class: "channel.Pipe"
+    'class: "pipe.Pipe"
 } external;
 
 isolated function produce(handle pipe,any data, decimal timeout) returns error? = @java:Method {
-    'class: "channel.Pipe"
+    'class: "pipe.Pipe"
 } external;
 
 isolated function immediateStop(handle pipe) = @java:Method {
-    'class: "channel.Pipe"
+    'class: "pipe.Pipe"
 } external;
 
 isolated function gracefulStop(handle pipe) returns error? = @java:Method {
-    'class: "channel.Pipe"
+    'class: "pipe.Pipe"
 } external;
 
 isolated function isClosed(handle pipe) returns boolean = @java:Method {
-    'class: "channel.Pipe"
+    'class: "pipe.Pipe"
 } external;

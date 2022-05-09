@@ -1,4 +1,5 @@
 import ballerina/jballerina.java;
+
 public class StreamGenerator {
     ResultIterator resultIterator;
 
@@ -20,10 +21,12 @@ public class StreamGenerator {
 }
 
 public class ResultIterator {
+    
     public isolated function nextValue(StreamGenerator streamGenerator) returns any|error = @java:Method {
-        'class: "channel.ResultIterator"
+        'class: "pipe.ResultIterator"
     } external;
+
     public isolated function close(StreamGenerator streamGenerator) returns error? = @java:Method {
-        'class: "channel.ResultIterator"
+        'class: "pipe.ResultIterator"
     } external;
 }

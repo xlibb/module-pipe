@@ -1,4 +1,4 @@
-package channel;
+package pipe;
 
 import io.ballerina.runtime.api.Environment;
 import io.ballerina.runtime.api.PredefinedTypes;
@@ -12,8 +12,10 @@ import io.ballerina.runtime.api.values.*;
 import java.util.LinkedList;
 import java.util.List;
 
-
-public class Pipe implements IPipe{
+/**
+ * Provide APIs to exchange data concurrently
+ */
+public class Pipe implements IPipe {
 
     private List<Object> queue = new LinkedList<Object>();
     private final Long limit;

@@ -1,5 +1,8 @@
-package channel;
+package pipe;
 
+/**
+ * This class provides comprehensible variables for generally used strings.
+ */
 public final class Constants {
     private Constants() {
     }

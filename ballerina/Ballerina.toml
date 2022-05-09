@@ -3,6 +3,5 @@ org = "nuvindu"
 name = "pipe"
 version = "0.1.0"
 
-
 [[platform.java11.dependency]]
 path = "../native/build/libs/native-0.1.0-SNAPSHOT.jar"

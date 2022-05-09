@@ -1,8 +1,12 @@
-package channel;
+package pipe;
+
 import io.ballerina.runtime.api.values.BDecimal;
 import io.ballerina.runtime.api.values.BError;
 
-public interface IPipe<E> {
+/**
+ * Interface of the Pipe class
+ */
+public interface IPipe {
     public BError produce(Object data, BDecimal timeout) throws InterruptedException;
     public Object consumeData(BDecimal timeout) throws InterruptedException;
     public boolean isClosed();
