@@ -1,3 +1,3 @@
-##Channel
+## Pipe
 
-Pipe implementation for Ballerina
+Pipe package for Ballerina
