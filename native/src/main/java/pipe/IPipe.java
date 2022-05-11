@@ -10,6 +10,6 @@ public interface IPipe {
     public BError produce(Object data, BDecimal timeout) throws InterruptedException;
     public Object consumeData(BDecimal timeout) throws InterruptedException;
     public boolean isClosed();
-    public void immediateStop();
-    public void gracefulStop() throws InterruptedException;
+    public void immediateClose();
+    public void gracefulClose() throws InterruptedException;
 }

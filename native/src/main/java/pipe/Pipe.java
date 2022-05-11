@@ -59,13 +59,13 @@ public class Pipe implements IPipe {
     }
 
     @Override
-    public synchronized void immediateStop() {
+    public synchronized void immediateClose() {
         this.isClosed = true;
         this.queue = null;
     }
 
     @Override
-    public synchronized void gracefulStop() throws InterruptedException {
+    public synchronized void gracefulClose() throws InterruptedException {
         this.isClosed = true;
         if (this.queue.size() != 0){
             wait(30000);

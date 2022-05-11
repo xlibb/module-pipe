@@ -23,11 +23,11 @@ public class Pipe {
     } external;
 
     public isolated function immediateStop() {
-        immediateStop(self.javaPipeObject);
+        immediateClose(self.javaPipeObject);
     }
 
     public isolated function gracefulStop() returns error?{
-        check gracefulStop(self.javaPipeObject);
+        check gracefulClose(self.javaPipeObject);
     }
 
     public isolated function isClosed() returns boolean {
@@ -43,11 +43,11 @@ isolated function produce(handle pipe,any data, decimal timeout) returns error? 
     'class: "pipe.Pipe"
 } external;
 
-isolated function immediateStop(handle pipe) = @java:Method {
+isolated function immediateClose(handle pipe) = @java:Method {
     'class: "pipe.Pipe"
 } external;
 
-isolated function gracefulStop(handle pipe) returns error? = @java:Method {
+isolated function gracefulClose(handle pipe) returns error? = @java:Method {
     'class: "pipe.Pipe"
 } external;
 

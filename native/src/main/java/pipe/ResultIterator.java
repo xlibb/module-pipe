@@ -20,7 +20,7 @@ public class ResultIterator {
     }
 
     public static void close(BObject streamGenerator) throws InterruptedException {
-        ((Pipe) streamGenerator.getNativeData(Constants.NATIVE_PIPE)).gracefulStop();
+        ((Pipe) streamGenerator.getNativeData(Constants.NATIVE_PIPE)).gracefulClose();
         streamGenerator.addNativeData(Constants.NATIVE_PIPE,null);
     }
 }
