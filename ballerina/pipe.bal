@@ -22,11 +22,11 @@ public class Pipe {
         'class: "pipe.Pipe"
     } external;
 
-    public isolated function immediateStop() {
+    public isolated function immediateClose() {
         immediateClose(self.javaPipeObject);
     }
 
-    public isolated function gracefulStop() returns error?{
+    public isolated function gracefulClose() returns error?{
         check gracefulClose(self.javaPipeObject);
     }
 

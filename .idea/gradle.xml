@@ -12,6 +12,7 @@
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/ballerina" />
+            <option value="$PROJECT_DIR$/build-config/checkstyle" />
             <option value="$PROJECT_DIR$/native" />
           </set>
         </option>

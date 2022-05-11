@@ -1,9 +1,11 @@
+import ballerina/io;
 import ballerina/test;
 
 @test:Config {}
 function testPipe() returns error? {
     Pipe pipe = new(5);
     error? produce = pipe.produce("pipe_test", timeout = 5);
+    io:println(produce);
     string|error actualValue = pipe.consume(5);
     string expectedValue = "pipe_test";
     if actualValue !is error? {
@@ -16,6 +18,7 @@ function testPipeStream() {
     Pipe pipe = new(5);
     error? produce = pipe.produce("1", timeout = 5);
     produce = pipe.produce("2", timeout = 5);
+    io:println(produce);
     stream<string, error?> 'stream = pipe.consumeStream(timeout = 5);
     foreach int i in 1 ..< 3 {
         string expectedValue = i.toString();
