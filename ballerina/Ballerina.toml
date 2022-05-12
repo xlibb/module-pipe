@@ -2,6 +2,11 @@
 org = "nuvindu_dias"
 name = "pipe"
 version = "0.1.0"
+authors = ["Ballerina"]
+keywords = ["pipe"]
+repository = "https://github.com/Nuvindu/module-pipe"
+license = ["Apache-2.0"]
+distribution = "2201.0.1"
 
 [[platform.java11.dependency]]
 path = "../native/build/libs/native-0.1.0-SNAPSHOT.jar"
