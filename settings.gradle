@@ -21,10 +21,12 @@ plugins {
 }
 
 include ':checkstyle'
-include 'native'
-include 'ballerina'
+include ':pipe-native'
+include ':pipe-ballerina'
 
 project(':checkstyle').projectDir = file("build-config${File.separator}checkstyle")
+project(':pipe-native').projectDir = file('native')
+project(':pipe-ballerina').projectDir = file('ballerina')
 
 gradleEnterprise {
     buildScan {
