@@ -9,4 +9,4 @@ license = ["Apache-2.0"]
 distribution = "2201.0.1"
 
 [[platform.java11.dependency]]
-path = "../native/build/libs/native-0.1.0-SNAPSHOT.jar"
+path = "../pipe-native/build/libs/native-0.1.0-SNAPSHOT.jar"
