@@ -23,6 +23,7 @@ plugins {
 include ':checkstyle'
 include ':pipe-native'
 include ':pipe-ballerina'
+include ':examples'
 
 project(':checkstyle').projectDir = file("build-config${File.separator}checkstyle")
 project(':pipe-native').projectDir = file('native')

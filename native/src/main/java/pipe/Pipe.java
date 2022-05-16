@@ -27,7 +27,7 @@ public class Pipe implements IPipe {
     @Override
     public synchronized BError produce(Object data, BDecimal timeout) throws InterruptedException {
         if (this.isClosed) {
-            return ErrorCreator.createError(StringUtils.fromString("Data cannot be produced to a closed pipe."));
+            return ErrorCreator.createError(StringUtils.fromString("Data"));
         }
         if (this.queue.size() == this.limit){
             wait((long) (timeout.floatValue()*1000));
@@ -42,7 +42,7 @@ public class Pipe implements IPipe {
     @Override
     public synchronized Object consumeData(BDecimal timeout) throws InterruptedException {
         if (this.queue == null) {
-            return ErrorCreator.createError(StringUtils.fromString("No any data available in the closed pipe."));
+            return ErrorCreator.createError(StringUtils.fromString("No"));
         }
         if (this.queue.size() == 0) {
             wait((long) (timeout.floatValue()*1000));

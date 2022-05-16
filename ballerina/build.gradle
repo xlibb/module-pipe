@@ -77,7 +77,7 @@ publishing {
     repositories {
         maven {
             name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/ballerina-platform/module-${packageOrg}-${packageName}")
+            url = uri("https://maven.pkg.github.com/Nuvindu/module-pipe")
             credentials {
                 username = System.getenv("publishUser")
                 password = System.getenv("publishPAT")
@@ -88,6 +88,7 @@ publishing {
 
 updateTomlFiles.dependsOn copyStdlibs
 
+build.dependsOn ":pipe-native:build"
 build.dependsOn "generatePomFileForMavenPublication"
 publishToMavenLocal.dependsOn build
 publish.dependsOn build
