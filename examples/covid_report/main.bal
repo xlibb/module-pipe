@@ -13,6 +13,8 @@ public function main() returns error? {
             }
             runtime:sleep(5);
         }
+        error? gracefulClose = pipe.gracefulClose();
+        io:print(gracefulClose);
     }
 
     @strand {

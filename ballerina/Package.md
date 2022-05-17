@@ -1,3 +1,3 @@
-## Pipe
+# Package Overview
 
-Pipe package for Ballerina
+This package provides APIs to simultaneously send and receive data.

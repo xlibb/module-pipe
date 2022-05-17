@@ -29,7 +29,7 @@ public class Pipe implements IPipe {
         if (this.isClosed) {
             return ErrorCreator.createError(StringUtils.fromString("Data cannot be produced to a closed pipe."));
         }
-        if (this.queue.size() == this.limit){
+        while (this.queue.size() == this.limit){
             wait((long) (timeout.floatValue()*1000));
         }
         if (this.queue.size() == 0) {
@@ -44,7 +44,7 @@ public class Pipe implements IPipe {
         if (this.queue == null) {
             return ErrorCreator.createError(StringUtils.fromString("No any data is available in the closed pipe."));
         }
-        if (this.queue.size() == 0) {
+        while (this.queue.size() == 0) {
             wait((long) (timeout.floatValue()*1000));
         }
         if (this.queue.size() == this.limit) {
