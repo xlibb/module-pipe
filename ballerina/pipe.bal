@@ -2,7 +2,7 @@ import ballerina/jballerina.java;
 
 public class Pipe {
     private handle javaPipeObject;
-    
+
     # Initiating a new Pipe instance.
     #
     # + 'limit - The maximum limit of data that holds in the pipe at once.
@@ -12,7 +12,7 @@ public class Pipe {
 
     # Add data into the pipe.
     #
-    # + element - Data that needs to produce to the pipe. Can be any type. 
+    # + element - Data that needs to produce to the pipe. Can be any type.
     # + timeout - The maximum waiting period that holds data in the buffer
     # + return - If data is successfully produced, return (). otherwise returns an error.
     public isolated function produce(any element, decimal timeout) returns error? {
@@ -38,8 +38,8 @@ public class Pipe {
     # + timeout - The maximum waiting period to receive data.  
     # + typeParam - Default parameter used to infer the user specified type.
     # + return - Returns a stream. The stream type is inferred as user specified.
-    public isolated function consumeStream(decimal timeout, typedesc<any> typeParam = <>) 
-        returns stream<typeParam,error?> = @java:Method {
+    public isolated function consumeStream(decimal timeout, typedesc<any> typeParam = <>)
+        returns stream<typeParam, error?> = @java:Method {
         'class: "pipe.Pipe"
     } external;
 
@@ -50,7 +50,7 @@ public class Pipe {
 
     # Close the pipe gracefully. Waits for some period until all the data in the pipe is consumed.
     # + return - Return (), if the pipe is successfully closed. Otherwise returns an error.
-    public isolated function gracefulClose() returns error?{
+    public isolated function gracefulClose() returns error? {
         check gracefulClose(self.javaPipeObject);
     }
 

@@ -27,7 +27,7 @@ public class StreamGenerator {
 }
 
 public class ResultIterator {
-    
+
     isolated function nextValue(StreamGenerator streamGenerator) returns any|error = @java:Method {
         'class: "pipe.ResultIterator"
     } external;
