@@ -4,7 +4,7 @@ import io.ballerina.runtime.api.values.BDecimal;
 import io.ballerina.runtime.api.values.BError;
 
 /**
- * Interface of the Pipe class
+ * Abstract APIs of the Pipe class.
  */
 public interface IPipe {
     public BError produce(Object data, BDecimal timeout) throws InterruptedException;

@@ -6,7 +6,7 @@ import io.ballerina.runtime.api.values.BDecimal;
 import io.ballerina.runtime.api.values.BObject;
 
 /**
- * Java implementation for the APIs of the stream returned from the pipe
+ * Java implementation for the APIs of the stream returned from the pipe.
  */
 public class ResultIterator {
 
@@ -21,6 +21,6 @@ public class ResultIterator {
 
     public static void close(BObject streamGenerator) throws InterruptedException {
         ((Pipe) streamGenerator.getNativeData(Constants.NATIVE_PIPE)).gracefulClose();
-        streamGenerator.addNativeData(Constants.NATIVE_PIPE,null);
+        streamGenerator.addNativeData(Constants.NATIVE_PIPE, null);
     }
 }
