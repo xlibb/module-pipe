@@ -1,4 +1,3 @@
-module channel {
+module pipe {
     requires io.ballerina.runtime;
-
 }

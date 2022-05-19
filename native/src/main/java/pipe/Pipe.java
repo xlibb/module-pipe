@@ -16,11 +16,19 @@ import io.ballerina.runtime.api.values.BTypedesc;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Provide APIs to exchange data concurrently.
  */
 public class Pipe implements IPipe {
+    final Lock lock = new ReentrantLock();
+    final Condition notFull  = lock.newCondition();
+    final Condition notEmpty = lock.newCondition();
+    final Condition close = lock.newCondition();
 
     private List<Object> queue = new LinkedList<Object>();
     private final Long limit;
@@ -30,36 +38,46 @@ public class Pipe implements IPipe {
     }
 
     @Override
-    public synchronized BError produce(Object data, BDecimal timeout) throws InterruptedException {
+    public BError produce(Object data, BDecimal timeout) throws InterruptedException {
+        lock.lock();
         if (this.isClosed) {
             return ErrorCreator.createError(StringUtils.fromString("Data cannot be produced to a closed pipe."));
         }
-        while (this.queue.size() == this.limit) {
-            wait((long) (timeout.floatValue() * 1000));
+        try {
+            while (this.queue.size() == this.limit) {
+                if (!notFull.await((long) timeout.floatValue(), TimeUnit.SECONDS)) {
+                    return ErrorCreator.createError(StringUtils.fromString("Operation Timed Out."));
+                }
+            }
+            this.queue.add(data);
+            notEmpty.signal();
+        } finally {
+            lock.unlock();
         }
-        if (this.queue.size() == 0) {
-            notifyAll();
-        }
-        this.queue.add(data);
         return null;
     }
 
     @Override
-    public synchronized Object consumeData(BDecimal timeout) throws InterruptedException {
+    public Object consumeData(BDecimal timeout) throws InterruptedException {
+        lock.lock();
         if (this.queue == null) {
             return ErrorCreator.createError(StringUtils.fromString("No any data is available in the closed pipe."));
         }
-        while (this.queue.size() == 0) {
-            wait((long) (timeout.floatValue() * 1000));
+        try {
+            while (this.queue.size() == 0) {
+                if (!notEmpty.await((long) timeout.floatValue(), TimeUnit.SECONDS)) {
+                    return ErrorCreator.createError(StringUtils.fromString("Operation Timed Out."));
+                }
+            }
+            notFull.signal();
+            return this.queue.remove(0);
+        } finally {
+            lock.unlock();
         }
-        if (this.queue.size() == this.limit) {
-            notifyAll();
-        }
-        return this.queue.remove(0);
     }
 
     @Override
-    public synchronized boolean isClosed() {
+    public boolean isClosed() {
         return this.isClosed;
     }
 
@@ -71,11 +89,18 @@ public class Pipe implements IPipe {
 
     @Override
     public synchronized void gracefulClose() throws InterruptedException {
+        lock.lock();
         this.isClosed = true;
-        while (this.queue.size() != 0) {
-            wait(30000);
+        try {
+            while (this.queue.size() != 0) {
+                if (!close.await(30, TimeUnit.SECONDS)) {
+                    break;
+                };
+            }
         }
-        this.queue = null;
+        finally {
+            this.queue = null;
+        }
     }
 
     public static BStream consumeStream(Environment env, BObject pipe, BDecimal timeout, BTypedesc typeParam) {
