@@ -40,13 +40,13 @@ public class Pipe implements IPipe {
     @Override
     public BError produce(Object data, BDecimal timeout) throws InterruptedException {
         lock.lock();
-        if (this.isClosed) {
-            return ErrorCreator.createError(StringUtils.fromString("Data cannot be produced to a closed pipe."));
-        }
         try {
+            if (this.isClosed) {
+                return ErrorCreator.createError(StringUtils.fromString("Data cannot be produced to a closed pipe."));
+            }
             while (this.queue.size() == this.limit) {
                 if (!notFull.await((long) timeout.floatValue(), TimeUnit.SECONDS)) {
-                    return ErrorCreator.createError(StringUtils.fromString("Operation Timed Out."));
+                    return ErrorCreator.createError(StringUtils.fromString("Operation has timed out."));
                 }
             }
             this.queue.add(data);
@@ -60,13 +60,13 @@ public class Pipe implements IPipe {
     @Override
     public Object consumeData(BDecimal timeout) throws InterruptedException {
         lock.lock();
-        if (this.queue == null) {
-            return ErrorCreator.createError(StringUtils.fromString("No any data is available in the closed pipe."));
-        }
         try {
+            if (this.queue == null) {
+                return ErrorCreator.createError(StringUtils.fromString("No data is available in the closed pipe."));
+            }
             while (this.queue.size() == 0) {
                 if (!notEmpty.await((long) timeout.floatValue(), TimeUnit.SECONDS)) {
-                    return ErrorCreator.createError(StringUtils.fromString("Operation Timed Out."));
+                    return ErrorCreator.createError(StringUtils.fromString("Operation has timed out."));
                 }
             }
             notFull.signal();
@@ -78,28 +78,33 @@ public class Pipe implements IPipe {
 
     @Override
     public boolean isClosed() {
-        return this.isClosed;
+        lock.lock();
+        try {
+            return this.isClosed;
+        } finally {
+            lock.unlock();
+        }
     }
 
     @Override
-    public synchronized void immediateClose() {
+    public void immediateClose() {
         this.isClosed = true;
         this.queue = null;
     }
 
     @Override
-    public synchronized void gracefulClose() throws InterruptedException {
+    public void gracefulClose() throws InterruptedException {
         lock.lock();
-        this.isClosed = true;
         try {
+            this.isClosed = true;
             while (this.queue.size() != 0) {
                 if (!close.await(30, TimeUnit.SECONDS)) {
                     break;
-                };
+                }
             }
-        }
-        finally {
+        } finally {
             this.queue = null;
+            lock.unlock();
         }
     }
 
