@@ -12,8 +12,8 @@ public class Pipe {
 
     # Add data into the pipe.
     #
-    # + element - Data that needs to produce to the pipe. Can be any type.
-    # + timeout - The maximum waiting period that holds data in the buffer
+    # + element - Data that needs to be produced to the pipe. Can be any type.
+    # + timeout - The maximum waiting period that holds data.
     # + return - If data is successfully produced, return (). otherwise returns an error.
     public isolated function produce(any element, decimal timeout) returns error? {
         if element == () {
@@ -25,9 +25,9 @@ public class Pipe {
     # Return data from the pipe.
     #
     # + timeout - The maximum waiting period to receive data.  
-    # + typeParam - Parameter Description
+    # + typeParam - Default parameter used to infer the user specified type.
     # + return - The same data type that has been produced to the pipe will return here. 
-    #            If an error occurred in the process, return an error.
+    # If an error occurred in the process, return an error.
     public isolated function consume(decimal timeout, typedesc<any> typeParam = <>)
         returns typeParam|error = @java:Method {
         'class: "pipe.Pipe"
@@ -35,7 +35,7 @@ public class Pipe {
 
     # Return data from the pipe in a stream.
     #
-    # + timeout - The maximum waiting period to receive data.  
+    # + timeout - The maximum waiting period to receive data.
     # + typeParam - Default parameter used to infer the user specified type.
     # + return - Returns a stream. The stream type is inferred as user specified.
     public isolated function consumeStream(decimal timeout, typedesc<any> typeParam = <>)
@@ -43,7 +43,7 @@ public class Pipe {
         'class: "pipe.Pipe"
     } external;
 
-    # Close the pipe object immediately. Unexpected errors can occur.
+    # Close the pipe instantly. Unexpected errors can occur.
     public isolated function immediateClose() {
         immediateClose(self.javaPipeObject);
     }
