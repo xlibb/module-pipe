@@ -2,7 +2,6 @@ package pipe;
 
 import io.ballerina.runtime.api.Environment;
 import io.ballerina.runtime.api.PredefinedTypes;
-import io.ballerina.runtime.api.creators.ErrorCreator;
 import io.ballerina.runtime.api.creators.TypeCreator;
 import io.ballerina.runtime.api.creators.ValueCreator;
 import io.ballerina.runtime.api.types.UnionType;
@@ -20,6 +19,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+
+import static io.ballerina.runtime.pipe.utils.Utils.ERROR_TYPE;
+import static io.ballerina.runtime.pipe.utils.Utils.createError;
 
 /**
  * Provide APIs to exchange data concurrently.
@@ -42,11 +44,11 @@ public class Pipe implements IPipe {
         lock.lock();
         try {
             if (this.isClosed) {
-                return ErrorCreator.createError(StringUtils.fromString("Data cannot be produced to a closed pipe."));
+                throw createError("Data cannot be produced to a closed pipe.", ERROR_TYPE);
             }
             while (this.queue.size() == this.limit) {
                 if (!notFull.await((long) timeout.floatValue(), TimeUnit.SECONDS)) {
-                    return ErrorCreator.createError(StringUtils.fromString("Operation has timed out."));
+                    throw createError("Operation has timed out.", ERROR_TYPE);
                 }
             }
             this.queue.add(data);
@@ -62,11 +64,11 @@ public class Pipe implements IPipe {
         lock.lock();
         try {
             if (this.queue == null) {
-                return ErrorCreator.createError(StringUtils.fromString("No data is available in the closed pipe."));
+                throw createError("No any data is available in the closed pipe.", ERROR_TYPE);
             }
             while (this.queue.size() == 0) {
                 if (!notEmpty.await((long) timeout.floatValue(), TimeUnit.SECONDS)) {
-                    return ErrorCreator.createError(StringUtils.fromString("Operation has timed out."));
+                    throw createError("Operation has timed out.", ERROR_TYPE);
                 }
             }
             notFull.signal();

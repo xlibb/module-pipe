@@ -17,7 +17,7 @@ public class Pipe {
     # + return - If data is successfully produced, return (). otherwise returns an error.
     public isolated function produce(any element, decimal timeout) returns error? {
         if element == () {
-            return error("Null values cannot be produced to a pipe.");
+            return error Error("Null values cannot be produced to a pipe.");
         }
         check produce(self.javaPipeObject, element, timeout);
     }
