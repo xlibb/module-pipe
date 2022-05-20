@@ -3,9 +3,9 @@ import ballerina/io;
 import ballerina/test;
 
 @test:Config {
-    groups: ["pipe"]
+    groups: ["pipe", "covid_report_example"]
 }
-function testPipe() returns error? {
+function testPipeConcurrently() returns error? {
     pipe:Pipe pipe = new (5);
     worker A {
         foreach int i in 1..<5 {
@@ -32,9 +32,9 @@ function testPipe() returns error? {
 }
 
 @test:Config {
-    groups: ["pipe"]
+    groups: ["pipe", "covid_report_example"]
 }
-function testPipeWithObjects() returns error? {
+function testPipeWithObjectsConcurrently() returns error? {
     pipe:Pipe pipe = new (5);
     Report report = new("20220514", 663655, 988, 553467, 16511);
     worker A {
