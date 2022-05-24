@@ -11,8 +11,8 @@ class StreamGenerator {
     # 
     # + return - If the stream has elements, return the element wrapped in a record with single field called `value`,
     #            otherwise returns `()`
-    public isolated function next() returns record {|any value;|}|error? {
-        any|error streamValue = self.resultIterator.nextValue(self);
+    public isolated function next() returns record {|any value;|}|Error? {
+        any|Error streamValue = self.resultIterator.nextValue(self);
         if streamValue is any {
             return {value: streamValue};
         }
@@ -23,18 +23,18 @@ class StreamGenerator {
     # 
     # + return - Returns `()`, if the stream is successfully closed. Otherwise returns an error.
     #            The pipe related to the stream will be gracefully closed during the process
-    public isolated function close() returns error? {
+    public isolated function close() returns Error? {
         return self.resultIterator.close(self);
     }
 }
 
 public class ResultIterator {
 
-    isolated function nextValue(StreamGenerator streamGenerator) returns any|error = @java:Method {
+    isolated function nextValue(StreamGenerator streamGenerator) returns any|Error = @java:Method {
         'class: "pipe.ResultIterator"
     } external;
 
-    isolated function close(StreamGenerator streamGenerator) returns error? = @java:Method {
+    isolated function close(StreamGenerator streamGenerator) returns Error? = @java:Method {
         'class: "pipe.ResultIterator"
     } external;
 }

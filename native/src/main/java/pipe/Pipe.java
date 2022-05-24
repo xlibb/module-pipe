@@ -39,7 +39,7 @@ public class Pipe implements IPipe {
     }
 
     @Override
-    public BError produce(Object data, BDecimal timeout) throws InterruptedException {
+    public BError produce(Object data, BDecimal timeout) {
         lock.lock();
         try {
             if (this.isClosed) {
@@ -52,6 +52,8 @@ public class Pipe implements IPipe {
             }
             this.queue.add(data);
             notEmpty.signal();
+        } catch (InterruptedException e) {
+            return createError("Operation has been interrupted.");
         } finally {
             lock.unlock();
         }
@@ -59,19 +61,24 @@ public class Pipe implements IPipe {
     }
 
     @Override
-    public Object consumeData(BDecimal timeout) throws InterruptedException {
+    public Object consumeData(BDecimal timeout) {
         lock.lock();
         try {
             if (this.queue == null) {
                 return createError("No any data is available in the closed pipe.");
             }
             while (this.queue.size() == 0) {
+                if (this.isClosed) {
+                    close.signal();
+                }
                 if (!notEmpty.await((long) timeout.floatValue(), TimeUnit.SECONDS)) {
                     return createError("Operation has timed out.");
                 }
             }
             notFull.signal();
             return this.queue.remove(0);
+        } catch (InterruptedException e) {
+            return createError("Operation has been interrupted.");
         } finally {
             lock.unlock();
         }
@@ -89,7 +96,7 @@ public class Pipe implements IPipe {
     }
 
     @Override
-    public void gracefulClose() throws InterruptedException {
+    public BError gracefulClose() {
         this.isClosed = true;
         lock.lock();
         try {
@@ -98,10 +105,13 @@ public class Pipe implements IPipe {
                     break;
                 }
             }
+        } catch (InterruptedException e) {
+            return createError("Operation has been interrupted.");
         } finally {
             this.queue = null;
             lock.unlock();
         }
+        return null;
     }
 
     public static BStream consumeStream(Environment env, BObject pipe, BDecimal timeout, BTypedesc typeParam) {
@@ -116,7 +126,7 @@ public class Pipe implements IPipe {
                                               streamGenerator);
     }
 
-    public static Object consume(BObject pipe, BDecimal timeout, BTypedesc typeParam) throws InterruptedException {
+    public static Object consume(BObject pipe, BDecimal timeout, BTypedesc typeParam) {
         BHandle handle = (BHandle) pipe.get(StringUtils.fromString(Constants.JAVA_PIPE_OBJECT));
         Pipe javaPipe = (Pipe) handle.getValue();
         return (Object) javaPipe.consumeData(timeout);

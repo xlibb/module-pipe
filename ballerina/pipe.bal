@@ -19,10 +19,7 @@ public class Pipe {
         if data == () {
             return error Error("Nil values cannot be produced to a pipe.");
         }
-        error? produceResult = produce(self.javaPipeObject, data, timeout);
-        if produceResult is error {
-            return error Error("Failed to produce data.", produceResult);
-        }
+        check produce(self.javaPipeObject, data, timeout);
     }
 
     # Consumes data in the pipe.
@@ -32,7 +29,7 @@ public class Pipe {
     # + return - Return type is inferred as user specified. That should be the same data type produced to the pipe.
     #            Otherwise, returns a `pipe:Error`
     public isolated function consume(decimal timeout, typedesc<any> typeParam = <>)
-        returns typeParam|error = @java:Method {
+        returns typeParam|Error = @java:Method {
         'class: "pipe.Pipe"
     } external;
 
@@ -55,8 +52,8 @@ public class Pipe {
     # 
     # + return - Return `()`, if the pipe is successfully closed. Otherwise returns a `pipe:Error`
     public isolated function gracefulClose() returns Error? {
-        error? gracefulCloseResult = gracefulClose(self.javaPipeObject);
-        if gracefulCloseResult is error {
+        Error? gracefulCloseResult = gracefulClose(self.javaPipeObject);
+        if gracefulCloseResult is Error {
             return error Error("Failed to gracefully close the pipe", gracefulCloseResult);
         }
     }
@@ -73,7 +70,7 @@ function newPipe(int 'limit) returns handle = @java:Constructor {
     'class: "pipe.Pipe"
 } external;
 
-isolated function produce(handle pipe, any data, decimal timeout) returns error? = @java:Method {
+isolated function produce(handle pipe, any data, decimal timeout) returns Error? = @java:Method {
     'class: "pipe.Pipe"
 } external;
 
@@ -81,7 +78,7 @@ isolated function immediateClose(handle pipe) = @java:Method {
     'class: "pipe.Pipe"
 } external;
 
-isolated function gracefulClose(handle pipe) returns error? = @java:Method {
+isolated function gracefulClose(handle pipe) returns Error? = @java:Method {
     'class: "pipe.Pipe"
 } external;
 
