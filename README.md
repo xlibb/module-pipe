@@ -1,4 +1,7 @@
-# Pipe Package for Ballerina
+Ballerina Pipe Library
+===================
+
+  [![GitHub Last Commit](https://img.shields.io/github/last-commit/Nuvindu/module-pipe.svg)](https://github.com/Nuvindu/module-pipe/commits/main)
 
 ## Build from the source
 

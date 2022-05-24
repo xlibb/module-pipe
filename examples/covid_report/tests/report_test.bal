@@ -36,7 +36,8 @@ function testPipeConcurrently() returns error? {
 }
 function testPipeWithObjectsConcurrently() returns error? {
     pipe:Pipe pipe = new (5);
-    Report report = new("20220514", 663655, 988, 553467, 16511);
+    Report report = {date:"20220514", positive: 663655, hospitalizedCurrently: 988,
+                     hospitalizedTotal: 553467, deaths: 16511};
     worker A {
         error? produce = pipe.produce(report, timeout = 5.00111);
         if produce is error {

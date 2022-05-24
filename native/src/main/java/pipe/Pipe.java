@@ -20,7 +20,6 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import static io.ballerina.runtime.pipe.utils.Utils.ERROR_TYPE;
 import static io.ballerina.runtime.pipe.utils.Utils.createError;
 
 /**
@@ -32,7 +31,7 @@ public class Pipe implements IPipe {
     final Condition notEmpty = lock.newCondition();
     final Condition close = lock.newCondition();
 
-    private List<Object> queue = new LinkedList<Object>();
+    private List<Object> queue = new LinkedList<>();
     private final Long limit;
     private boolean isClosed = false;
     public Pipe(Long limit) {
@@ -44,11 +43,11 @@ public class Pipe implements IPipe {
         lock.lock();
         try {
             if (this.isClosed) {
-                throw createError("Data cannot be produced to a closed pipe.", ERROR_TYPE);
+                return createError("Data cannot be produced to a closed pipe.");
             }
             while (this.queue.size() == this.limit) {
                 if (!notFull.await((long) timeout.floatValue(), TimeUnit.SECONDS)) {
-                    throw createError("Operation has timed out.", ERROR_TYPE);
+                    return createError("Operation has timed out.");
                 }
             }
             this.queue.add(data);
@@ -64,11 +63,11 @@ public class Pipe implements IPipe {
         lock.lock();
         try {
             if (this.queue == null) {
-                throw createError("No any data is available in the closed pipe.", ERROR_TYPE);
+                return createError("No any data is available in the closed pipe.");
             }
             while (this.queue.size() == 0) {
                 if (!notEmpty.await((long) timeout.floatValue(), TimeUnit.SECONDS)) {
-                    throw createError("Operation has timed out.", ERROR_TYPE);
+                    return createError("Operation has timed out.");
                 }
             }
             notFull.signal();
@@ -80,12 +79,7 @@ public class Pipe implements IPipe {
 
     @Override
     public boolean isClosed() {
-        lock.lock();
-        try {
-            return this.isClosed;
-        } finally {
-            lock.unlock();
-        }
+        return this.isClosed;
     }
 
     @Override
@@ -96,9 +90,9 @@ public class Pipe implements IPipe {
 
     @Override
     public void gracefulClose() throws InterruptedException {
+        this.isClosed = true;
         lock.lock();
         try {
-            this.isClosed = true;
             while (this.queue.size() != 0) {
                 if (!close.await(30, TimeUnit.SECONDS)) {
                     break;

@@ -3,59 +3,67 @@ import ballerina/jballerina.java;
 public class Pipe {
     private handle javaPipeObject;
 
-    # Initiating a new Pipe instance.
+    # Creates a new `pipe:Pipe` instance.
     #
-    # + 'limit - The maximum limit of data that holds in the pipe at once.
+    # + 'limit - The maximum number of entries that holds in the pipe at once
     public function init(int 'limit) {
         self.javaPipeObject = newPipe('limit);
     }
 
-    # Add data into the pipe.
+    # Produces data into the pipe.
     #
-    # + element - Data that needs to be produced to the pipe. Can be any type.
-    # + timeout - The maximum waiting period that holds data.
-    # + return - If data is successfully produced, return (). otherwise returns an error.
-    public isolated function produce(any element, decimal timeout) returns error? {
-        if element == () {
-            return error Error("Null values cannot be produced to a pipe.");
+    # + data - Data that needs to be produced to the pipe. Can be `any` type
+    # + timeout - The maximum waiting period that holds data
+    # + return - Returns `()` if data is successfully produced. Otherwise returns a `pipe:Error`
+    public isolated function produce(any data, decimal timeout) returns Error? {
+        if data == () {
+            return error Error("Nil values cannot be produced to a pipe.");
         }
-        check produce(self.javaPipeObject, element, timeout);
+        error? produceResult = produce(self.javaPipeObject, data, timeout);
+        if produceResult is error {
+            return error Error("Failed to produce data.", produceResult);
+        }
     }
 
-    # Return data from the pipe.
+    # Consumes data in the pipe.
     #
-    # + timeout - The maximum waiting period to receive data.  
-    # + typeParam - Default parameter used to infer the user specified type.
-    # + return - The same data type that has been produced to the pipe will return here. 
-    # If an error occurred in the process, return an error.
+    # + timeout - The maximum waiting period to consume data
+    # + typeParam - Default parameter that is used to infer the user specified type
+    # + return - Return type is inferred as user specified. That should be the same data type produced to the pipe.
+    #            Otherwise, returns a `pipe:Error`
     public isolated function consume(decimal timeout, typedesc<any> typeParam = <>)
         returns typeParam|error = @java:Method {
         'class: "pipe.Pipe"
     } external;
 
-    # Return data from the pipe in a stream.
+    # Consumes the data in the pipe as a `stream`
     #
-    # + timeout - The maximum waiting period to receive data.
-    # + typeParam - Default parameter used to infer the user specified type.
-    # + return - Returns a stream. The stream type is inferred as user specified.
+    # + timeout - The maximum waiting period to consume data
+    # + typeParam - Default parameter that is used to infer the user specified type
+    # + return - Returns a `stream`. The stream type is inferred as user specified
     public isolated function consumeStream(decimal timeout, typedesc<any> typeParam = <>)
         returns stream<typeParam, error?> = @java:Method {
         'class: "pipe.Pipe"
     } external;
 
-    # Close the pipe instantly. Unexpected errors can occur.
+    # Closes the pipe instantly.
     public isolated function immediateClose() {
         immediateClose(self.javaPipeObject);
     }
 
-    # Close the pipe gracefully. Waits for some period until all the data in the pipe is consumed.
-    # + return - Return (), if the pipe is successfully closed. Otherwise returns an error.
-    public isolated function gracefulClose() returns error? {
-        check gracefulClose(self.javaPipeObject);
+    # Closes the pipe gracefully. Waits for some grace period until all the data in the pipe is consumed.
+    # 
+    # + return - Return `()`, if the pipe is successfully closed. Otherwise returns a `pipe:Error`
+    public isolated function gracefulClose() returns Error? {
+        error? gracefulCloseResult = gracefulClose(self.javaPipeObject);
+        if gracefulCloseResult is error {
+            return error Error("Failed to gracefully close the pipe", gracefulCloseResult);
+        }
     }
 
-    # Check whether the pipe is closed.
-    # + return - Return true, if the pipe is closed. Otherwise returns false.
+    # Checks whether the pipe is closed.
+    # 
+    # + return - Returns `true`, if the pipe is closed. Otherwise returns `false`
     public isolated function isClosed() returns boolean {
         return isClosed(self.javaPipeObject);
     }

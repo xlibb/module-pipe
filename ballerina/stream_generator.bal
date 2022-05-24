@@ -1,6 +1,6 @@
 import ballerina/jballerina.java;
 
-public class StreamGenerator {
+class StreamGenerator {
     ResultIterator resultIterator;
 
     public isolated function init(ResultIterator resultIterator) {
@@ -8,8 +8,9 @@ public class StreamGenerator {
     }
 
     # Returns the next element in the stream wrapped in a record or () if the stream ends.
+    # 
     # + return - If the stream has elements, return the element wrapped in a record with single field called `value`,
-    #            otherwise returns ()
+    #            otherwise returns `()`
     public isolated function next() returns record {|any value;|}|error? {
         any|error streamValue = self.resultIterator.nextValue(self);
         if streamValue is any {
@@ -18,9 +19,10 @@ public class StreamGenerator {
         return streamValue;
     }
 
-    # Close the stream along with the pipe.
-    # + return - Return (), if the stream is successfully closed. Otherwise returns error.
-    #            The pipe related to the stream will be gracefully closed during the process.
+    # Closes the stream along with the pipe.
+    # 
+    # + return - Returns `()`, if the stream is successfully closed. Otherwise returns an error.
+    #            The pipe related to the stream will be gracefully closed during the process
     public isolated function close() returns error? {
         return self.resultIterator.close(self);
     }

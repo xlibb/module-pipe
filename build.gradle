@@ -64,7 +64,7 @@ release {
 }
 
 task build {
-    dependsOn(':examples:build')
+    dependsOn(':pipe-examples:build')
     dependsOn(':pipe-native:build')
     dependsOn(':pipe-ballerina:build')
 }

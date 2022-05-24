@@ -8,7 +8,8 @@ public function getReportData() returns Report[]|error {
         int hospitalizedCurrently = check data.hospitalizedCurrently;
         int hospitalizedTotal = check data.hospitalizedCumulative;
         int deaths = check data.death;
-        reports.push(new Report(date, positive, hospitalizedCurrently, hospitalizedTotal, deaths));
+        reports.push({date: date, positive: positive, hospitalizedCurrently: hospitalizedCurrently,
+                     hospitalizedTotal: hospitalizedTotal, deaths: deaths});
     }
     return reports.reverse();
 }

@@ -12,17 +12,16 @@ import static io.ballerina.runtime.pipe.utils.ModuleUtils.getModule;
 public class Utils {
 
     private Utils() {
-
     }
 
     // Internal type names
     public static final String ERROR_TYPE = "Error";
 
-    public static BError createError(String message, String errorTypeName) {
-        return ErrorCreator.createError(getModule(), errorTypeName, StringUtils.fromString(message), null, null);
+    public static BError createError(String message) {
+        return ErrorCreator.createError(getModule(), ERROR_TYPE, StringUtils.fromString(message), null, null);
     }
 
-    public static BError createError(String message, String errorTypeName, BError cause) {
-        return ErrorCreator.createError(getModule(), errorTypeName, StringUtils.fromString(message), cause, null);
+    public static BError createError(String message, BError cause) {
+        return ErrorCreator.createError(getModule(), ERROR_TYPE, StringUtils.fromString(message), cause, null);
     }
 }

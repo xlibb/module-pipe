@@ -3,7 +3,6 @@ package pipe;
 import io.ballerina.runtime.api.values.BDecimal;
 import io.ballerina.runtime.api.values.BObject;
 
-import static io.ballerina.runtime.pipe.utils.Utils.ERROR_TYPE;
 import static io.ballerina.runtime.pipe.utils.Utils.createError;
 
 /**
@@ -17,7 +16,7 @@ public class ResultIterator {
             BDecimal timeOut = (BDecimal) streamGenerator.getNativeData(Constants.TIME_OUT);
             return pipe.consumeData(timeOut);
         }
-        throw createError("Data cannot be consumed after the stream is closed", ERROR_TYPE);
+        return createError("Data cannot be consumed after the stream is closed");
     }
 
     public static void close(BObject streamGenerator) throws InterruptedException {
