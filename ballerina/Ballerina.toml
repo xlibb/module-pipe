@@ -2,7 +2,7 @@
 org = "nuvindu_dias"
 name = "pipe"
 version = "0.1.0"
-authors = ["Ballerina"]
+authors = ["Nuvindu"]
 keywords = ["pipe"]
 repository = "https://github.com/Nuvindu/module-pipe"
 license = ["Apache-2.0"]
