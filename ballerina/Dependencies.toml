@@ -27,7 +27,7 @@ modules = [
 ]
 
 [[package]]
-org = "nuvindu_dias"
+org = "nuvindu"
 name = "pipe"
 version = "0.1.0"
 dependencies = [
@@ -35,7 +35,7 @@ dependencies = [
 	{org = "ballerina", name = "test"}
 ]
 modules = [
-	{org = "nuvindu_dias", packageName = "pipe", moduleName = "pipe"}
+	{org = "nuvindu", packageName = "pipe", moduleName = "pipe"}
 ]
 
 
