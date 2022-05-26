@@ -1,6 +1,5 @@
 package pipe;
 
-import io.ballerina.runtime.api.Environment;
 import io.ballerina.runtime.api.PredefinedTypes;
 import io.ballerina.runtime.api.creators.TypeCreator;
 import io.ballerina.runtime.api.creators.ValueCreator;
@@ -114,7 +113,7 @@ public class Pipe implements IPipe {
         return null;
     }
 
-    public static BStream consumeStream(Environment env, BObject pipe, BDecimal timeout, BTypedesc typeParam) {
+    public static BStream consumeStream(BObject pipe, BDecimal timeout, BTypedesc typeParam) {
         UnionType typeUnion = TypeCreator.createUnionType(PredefinedTypes.TYPE_NULL, PredefinedTypes.TYPE_ERROR);
         BObject resultIterator = ValueCreator.createObjectValue(getModule(), Constants.RESULT_ITERATOR);
         BObject streamGenerator = ValueCreator.createObjectValue(getModule(),

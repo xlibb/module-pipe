@@ -4,7 +4,7 @@ import ballerina/log;
 import ballerina/lang.runtime;
 //io:fprintln, log:printError
 public function main() returns error? {
-    pipe:Pipe pipe = new (5);
+    pipe:Pipe pipe = new(5);
     Report[] reports = check getReportData();
     worker A {
         foreach Report report in reports  {

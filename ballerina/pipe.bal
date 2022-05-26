@@ -26,7 +26,7 @@ public class Pipe {
     #
     # + timeout - The maximum waiting period to consume data
     # + typeParam - Default parameter that is used to infer the user specified type
-    # + return - Return type is inferred as user specified. That should be the same data type produced to the pipe.
+    # + return - Return type is inferred from the user specified type. That should be the same data type produced to the pipe.
     #            Otherwise, returns a `pipe:Error`
     public isolated function consume(decimal timeout, typedesc<any> typeParam = <>)
         returns typeParam|Error = @java:Method {
@@ -37,7 +37,7 @@ public class Pipe {
     #
     # + timeout - The maximum waiting period to consume data
     # + typeParam - Default parameter that is used to infer the user specified type
-    # + return - Returns a `stream`. The stream type is inferred as user specified
+    # + return - Returns a `stream`. The stream type is inferred from the user specified type
     public isolated function consumeStream(decimal timeout, typedesc<any> typeParam = <>)
         returns stream<typeParam, error?> = @java:Method {
         'class: "pipe.Pipe"
