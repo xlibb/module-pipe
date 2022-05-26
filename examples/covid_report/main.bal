@@ -1,27 +1,32 @@
-import nuvindu_dias/pipe;
+import nuvindu/pipe;
 import ballerina/io;
+import ballerina/log;
 import ballerina/lang.runtime;
-
+//io:fprintln, log:printError
 public function main() returns error? {
     pipe:Pipe pipe = new (5);
     Report[] reports = check getReportData();
     worker A {
         foreach Report report in reports  {
-            error? produce = pipe.produce(report, timeout = 5.00111);
+            io:println("starts");
+            error? produce = pipe.produce(report, timeout = 5);
+            io:println("produces");
             if produce is error {
                 io:println(produce);
             }
-            runtime:sleep(5);
+            runtime:sleep(1);
         }
         error? gracefulClose = pipe.gracefulClose();
-        io:print(gracefulClose);
+        if gracefulClose is error {
+            log:printError(gracefulClose.message(), gracefulClose); 
+        }
     }
 
     @strand {
         thread: "any"
     }
     worker B {
-        stream<Report, error?> covidReports = pipe.consumeStream(timeout = 10.12323);
+        stream<Report, error?> covidReports = pipe.consumeStream(timeout = 5.12323);
         CovidRecord|error? covidRecord = covidReports.next();
         int i = 0;
         while covidRecord is CovidRecord {

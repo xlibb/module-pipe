@@ -66,7 +66,7 @@ public class Pipe {
     }
 }
 
-function newPipe(int 'limit) returns handle = @java:Constructor {
+isolated function newPipe(int 'limit) returns handle = @java:Constructor {
     'class: "pipe.Pipe"
 } external;
 

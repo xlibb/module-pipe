@@ -1,4 +1,4 @@
-import nuvindu_dias/pipe;
+import nuvindu/pipe;
 import ballerina/io;
 import ballerina/test;
 

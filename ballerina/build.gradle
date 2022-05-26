@@ -19,7 +19,7 @@ buildscript {
 description = 'Ballerina - Pipe Package'
 
 def packageName = "pipe"
-def packageOrg = "nuvindu_dias"
+def packageOrg = "nuvindu"
 def tomlVersion = stripBallerinaExtensionVersion("0.1.0")
 def ballerinaTomlFilePlaceHolder = new File("${project.rootDir}/build-config/resources/Ballerina.toml")
 def ballerinaTomlFile = new File("$project.projectDir/Ballerina.toml")

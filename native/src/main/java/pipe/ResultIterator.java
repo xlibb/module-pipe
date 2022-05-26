@@ -21,8 +21,7 @@ public class ResultIterator {
     }
 
     public static BError close(BObject streamGenerator) {
-        BError gracefulClose = ((Pipe) streamGenerator.getNativeData(Constants.NATIVE_PIPE)).gracefulClose();
-        if (gracefulClose != null) {
+        if (((Pipe) streamGenerator.getNativeData(Constants.NATIVE_PIPE)).gracefulClose() != null) {
             return createError("Failed to gracefully closed the pipe.");
         }
         streamGenerator.addNativeData(Constants.NATIVE_PIPE, null);

@@ -20,13 +20,14 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import static io.ballerina.runtime.pipe.utils.ModuleUtils.getModule;
 import static io.ballerina.runtime.pipe.utils.Utils.createError;
 
 /**
  * Provide APIs to exchange data concurrently.
  */
 public class Pipe implements IPipe {
-    final Lock lock = new ReentrantLock();
+    final Lock lock = new ReentrantLock(true);
     final Condition notFull  = lock.newCondition();
     final Condition notEmpty = lock.newCondition();
     final Condition close = lock.newCondition();
@@ -40,11 +41,11 @@ public class Pipe implements IPipe {
 
     @Override
     public BError produce(Object data, BDecimal timeout) {
+        if (this.isClosed) {
+            return createError("Data cannot be produced to a closed pipe.");
+        }
         lock.lock();
         try {
-            if (this.isClosed) {
-                return createError("Data cannot be produced to a closed pipe.");
-            }
             while (this.queue.size() == this.limit) {
                 if (!notFull.await((long) timeout.floatValue(), TimeUnit.SECONDS)) {
                     return createError("Operation has timed out.");
@@ -60,13 +61,12 @@ public class Pipe implements IPipe {
         return null;
     }
 
-    @Override
-    public Object consumeData(BDecimal timeout) {
+    protected Object consumeData(BDecimal timeout) {
+        if (this.queue == null) {
+            return createError("No any data is available in the closed pipe.");
+        }
         lock.lock();
         try {
-            if (this.queue == null) {
-                return createError("No any data is available in the closed pipe.");
-            }
             while (this.queue.size() == 0) {
                 if (this.isClosed) {
                     close.signal();
@@ -116,8 +116,8 @@ public class Pipe implements IPipe {
 
     public static BStream consumeStream(Environment env, BObject pipe, BDecimal timeout, BTypedesc typeParam) {
         UnionType typeUnion = TypeCreator.createUnionType(PredefinedTypes.TYPE_NULL, PredefinedTypes.TYPE_ERROR);
-        BObject resultIterator = ValueCreator.createObjectValue(env.getCurrentModule(), Constants.RESULT_ITERATOR);
-        BObject streamGenerator = ValueCreator.createObjectValue(env.getCurrentModule(),
+        BObject resultIterator = ValueCreator.createObjectValue(getModule(), Constants.RESULT_ITERATOR);
+        BObject streamGenerator = ValueCreator.createObjectValue(getModule(),
                                                                  Constants.STREAM_GENERATOR, resultIterator);
         BHandle handle = (BHandle) pipe.get(StringUtils.fromString(Constants.JAVA_PIPE_OBJECT));
         streamGenerator.addNativeData(Constants.NATIVE_PIPE, handle.getValue());

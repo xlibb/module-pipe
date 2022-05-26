@@ -44,6 +44,20 @@ dependencies = [
 
 [[package]]
 org = "ballerina"
+name = "log"
+version = "2.2.1"
+dependencies = [
+	{org = "ballerina", name = "io"},
+	{org = "ballerina", name = "jballerina.java"},
+	{org = "ballerina", name = "lang.value"},
+	{org = "ballerina", name = "observe"}
+]
+modules = [
+	{org = "ballerina", packageName = "log", moduleName = "log"}
+]
+
+[[package]]
+org = "ballerina"
 name = "observe"
 version = "1.0.4"
 dependencies = [
@@ -75,30 +89,31 @@ modules = [
 ]
 
 [[package]]
-org = "nuvindu_dias"
+org = "nuvindu"
 name = "covid_report"
 version = "0.1.0"
 dependencies = [
 	{org = "ballerina", name = "io"},
 	{org = "ballerina", name = "lang.runtime"},
+	{org = "ballerina", name = "log"},
 	{org = "ballerina", name = "test"},
 	{org = "ballerinai", name = "observe"},
-	{org = "nuvindu_dias", name = "pipe"}
+	{org = "nuvindu", name = "pipe"}
 ]
 modules = [
-	{org = "nuvindu_dias", packageName = "covid_report", moduleName = "covid_report"},
-	{org = "nuvindu_dias", packageName = "covid_report", moduleName = "covid_report.resources"}
+	{org = "nuvindu", packageName = "covid_report", moduleName = "covid_report"},
+	{org = "nuvindu", packageName = "covid_report", moduleName = "covid_report.resources"}
 ]
 
 [[package]]
-org = "nuvindu_dias"
+org = "nuvindu"
 name = "pipe"
 version = "0.1.0"
 dependencies = [
 	{org = "ballerina", name = "jballerina.java"}
 ]
 modules = [
-	{org = "nuvindu_dias", packageName = "pipe", moduleName = "pipe"}
+	{org = "nuvindu", packageName = "pipe", moduleName = "pipe"}
 ]
 
 

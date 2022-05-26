@@ -1,5 +1,5 @@
 [package]
-org = "nuvindu_dias"
+org = "nuvindu"
 name = "pipe"
 version = "@toml.version@"
 authors = ["Nuvindu"]
