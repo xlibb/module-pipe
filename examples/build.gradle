@@ -24,9 +24,9 @@ task testExamples {
                 exec {
                     workingDir project.projectDir
                     if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-                        commandLine 'cmd', '/c', "bal test --offline ${example} && exit %%ERRORLEVEL%%"
+                        commandLine 'cmd', '/c', "${ballerinaDist}/bin/bal.bat test --offline ${example} && exit %%ERRORLEVEL%%"
                     } else {
-                        commandLine 'sh', '-c', "bal test --offline ${example}"
+                        commandLine 'sh', '-c', "${ballerinaDist}/bin/bal test --offline ${example}"
                     }
                 }
             } catch (Exception e) {
