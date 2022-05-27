@@ -1,5 +1,6 @@
 import ballerina/jballerina.java;
 
+# Consists of APIs to exchange data concurrently.
 public class Pipe {
     private handle javaPipeObject;
 
@@ -19,7 +20,7 @@ public class Pipe {
         if data == () {
             return error Error("Nil values cannot be produced to a pipe.");
         }
-        check produce(self.javaPipeObject, data, timeout);
+        check produce(self.javaPipeObject, data, timeout); //data - event
     }
 
     # Consumes data in the pipe.

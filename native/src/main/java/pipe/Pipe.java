@@ -57,7 +57,7 @@ public class Pipe implements IPipe {
         } finally {
             lock.unlock();
         }
-        return null;
+        return null; //why not null??
     }
 
     protected Object consumeData(BDecimal timeout) {
@@ -95,7 +95,7 @@ public class Pipe implements IPipe {
     }
 
     @Override
-    public BError gracefulClose() {
+    public BError gracefulClose() { //add timeouts
         this.isClosed = true;
         lock.lock();
         try {
