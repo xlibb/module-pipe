@@ -23,7 +23,7 @@ import static io.ballerina.runtime.pipe.utils.ModuleUtils.getModule;
 import static io.ballerina.runtime.pipe.utils.Utils.createError;
 
 /**
- * Provide APIs to exchange data concurrently.
+ * Provide APIs to exchange events concurrently.
  */
 public class Pipe implements IPipe {
     final Lock lock = new ReentrantLock(true);
@@ -39,9 +39,9 @@ public class Pipe implements IPipe {
     }
 
     @Override
-    public BError produce(Object data, BDecimal timeout) {
+    public BError produce(Object events, BDecimal timeout) {
         if (this.isClosed) {
-            return createError("Data cannot be produced to a closed pipe.");
+            return createError("Events cannot be produced to a closed pipe.");
         }
         lock.lock();
         try {
@@ -50,7 +50,7 @@ public class Pipe implements IPipe {
                     return createError("Operation has timed out.");
                 }
             }
-            this.queue.add(data);
+            this.queue.add(events);
             notEmpty.signal();
         } catch (InterruptedException e) {
             return createError("Operation has been interrupted.");
@@ -62,7 +62,7 @@ public class Pipe implements IPipe {
 
     protected Object consumeData(BDecimal timeout) {
         if (this.queue == null) {
-            return createError("No any data is available in the closed pipe.");
+            return createError("No any events is available in the closed pipe.");
         }
         lock.lock();
         try {
@@ -95,12 +95,12 @@ public class Pipe implements IPipe {
     }
 
     @Override
-    public BError gracefulClose() { //TODO: add timeouts
+    public BError gracefulClose(BDecimal timeout) {
         this.isClosed = true;
         lock.lock();
         try {
             while (this.queue.size() != 0) {
-                if (!close.await(30, TimeUnit.SECONDS)) {
+                if (!close.await((long) timeout.floatValue(), TimeUnit.SECONDS)) {
                     break;
                 }
             }

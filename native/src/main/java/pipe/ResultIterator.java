@@ -17,11 +17,12 @@ public class ResultIterator {
             BDecimal timeOut = (BDecimal) streamGenerator.getNativeData(Constants.TIME_OUT);
             return pipe.consumeData(timeOut);
         }
-        return createError("Data cannot be consumed after the stream is closed");
+        return createError("Events cannot be consumed after the stream is closed");
     }
 
     public static BError close(BObject streamGenerator) {
-        if (((Pipe) streamGenerator.getNativeData(Constants.NATIVE_PIPE)).gracefulClose() != null) {
+        BDecimal timeOut = (BDecimal) streamGenerator.getNativeData(Constants.TIME_OUT);
+        if (((Pipe) streamGenerator.getNativeData(Constants.NATIVE_PIPE)).gracefulClose(timeOut) != null) {
             return createError("Failed to gracefully closed the pipe.");
         }
         streamGenerator.addNativeData(Constants.NATIVE_PIPE, null);

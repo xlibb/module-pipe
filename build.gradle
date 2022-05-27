@@ -16,11 +16,6 @@ allprojects {
 
     repositories {
         mavenLocal()
-        
-        maven {
-            url = 'https://mvnrepository.com/artifact/org.testng/testng'
-        }
-        
         maven {
             url = 'https://repo.maven.apache.org/maven2'
         }
