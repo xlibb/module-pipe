@@ -53,10 +53,7 @@ public class Pipe {
     # 
     # + return - Return `()`, if the pipe is successfully closed. Otherwise returns a `pipe:Error`
     public isolated function gracefulClose() returns Error? {
-        Error? gracefulCloseResult = gracefulClose(self.javaPipeObject);
-        if gracefulCloseResult is Error {
-            return error Error("Failed to gracefully close the pipe", gracefulCloseResult);
-        }
+        check gracefulClose(self.javaPipeObject);
     }
 
     # Checks whether the pipe is closed.
