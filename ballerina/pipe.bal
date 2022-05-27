@@ -1,6 +1,6 @@
 import ballerina/jballerina.java;
 
-# Consists of APIs to exchange data concurrently.
+# Consists of APIs to exchange data concurrently
 public class Pipe {
     private handle javaPipeObject;
 
