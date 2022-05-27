@@ -38,17 +38,72 @@ function testPipeWithRecords() returns error? {
 }
 function testPipeStream() returns error? {
     Pipe pipe = new(5);
-    error? produce = pipe.produce("1", timeout = 5);
-    produce = pipe.produce("2", timeout = 5);
-    if produce !is error {
-        stream<string, error?> 'stream = pipe.consumeStream(timeout = 5);
-        foreach int i in 1 ..< 3 {
-            string expectedValue = i.toString();
-            record {| any value; |}|error? data = 'stream.next();
-            if data !is error? {
-                string actualValue = <string>data.value;
-                test:assertEquals(expectedValue, actualValue);
-            }
+    check pipe.produce("1", timeout = 5);
+    check pipe.produce("2", timeout = 5);
+    stream<string, error?> 'stream = pipe.consumeStream(timeout = 5);
+    foreach int i in 1 ..< 3 {
+        string expectedValue = i.toString();
+        record {| any value; |}|error? data = 'stream.next();
+        if data !is error? {
+            string actualValue = <string>data.value;
+            test:assertEquals(expectedValue, actualValue);
         }
     }
+    check 'stream.close();
+    string expectedValue = "Data cannot be produced to a closed pipe.";
+    Error? actualValue = pipe.produce("1", timeout = 5);
+    test:assertTrue(actualValue is Error, "Error was not produced while producing data to a closed pipe.");
+    if actualValue is Error {
+        test:assertEquals(actualValue.message(), expectedValue);
+    }
+    record {| string value; |}|error? nextValue = 'stream.next();
+    test:assertTrue(nextValue is error, "Error was not produced while consuming data from a closed and empty pipe.");
+    expectedValue = "Data cannot be consumed after the stream is closed";
+    if nextValue is Error {
+        test:assertEquals(nextValue.message(), expectedValue);
+    }
+
+}
+
+@test:Config {
+    groups: ["pipe"]
+}
+function testImmediateClose() returns error? {
+    Pipe pipe = new(5);
+    check pipe.produce("1", timeout = 5);
+    pipe.immediateClose();
+    string expectedValue = "No any data is available in the closed pipe.";
+    string|Error actualValue = pipe.consume(5);
+    test:assertTrue(actualValue is Error, "Error was not produced while consuming data from a closed and empty pipe.");
+    if actualValue is Error {
+        test:assertEquals(actualValue.message(), expectedValue);
+    }
+}
+
+@test:Config {
+    groups: ["pipe"]
+}
+function testGracefulClose() returns error? {
+    Pipe pipe = new(5);
+    check pipe.gracefulClose();
+    string expectedValue = "Data cannot be produced to a closed pipe.";
+    Error? actualValue = pipe.produce("1", timeout = 5);
+    test:assertTrue(actualValue is Error, "Error was not produced while producing data to a closed pipe.");
+    if actualValue is Error {
+        test:assertEquals(actualValue.message(), expectedValue);
+    }
+}
+
+@test:Config {
+    groups: ["pipe"]
+}
+function testIsClosedInPipe() returns error? {
+    Pipe pipe = new(5);
+    string expectedValue = "Assertion failed for 'isClosed()' method";
+    test:assertTrue(!pipe.isClosed(), expectedValue);
+    check pipe.gracefulClose();
+    test:assertTrue(pipe.isClosed(), expectedValue);
+    Pipe newPipe = new(5);
+    newPipe.immediateClose();
+    test:assertTrue(pipe.isClosed(), expectedValue);
 }
