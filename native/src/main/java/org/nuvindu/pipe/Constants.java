@@ -1,4 +1,4 @@
-package pipe;
+package org.nuvindu.pipe;
 
 /**
  * This class provides comprehensible variables for generally used strings.

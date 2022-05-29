@@ -1,10 +1,10 @@
-package pipe;
+package org.nuvindu.pipe;
 
 import io.ballerina.runtime.api.values.BDecimal;
 import io.ballerina.runtime.api.values.BError;
 import io.ballerina.runtime.api.values.BObject;
 
-import static org.nuvindu.pipe.runtime.utils.Utils.createError;
+import static org.nuvindu.pipe.utils.Utils.createError;
 
 /**
  * Java implementation for the APIs of the stream returned from the pipe.

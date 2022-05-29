@@ -5,5 +5,5 @@ isolated function init() {
 }
 
 isolated function setModule() = @java:Method {
-    'class: "org.nuvindu.pipe.runtime.utils.ModuleUtils"
+    'class: "org.nuvindu.pipe.utils.ModuleUtils"
 } external;

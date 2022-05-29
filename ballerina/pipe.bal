@@ -32,7 +32,7 @@ public class Pipe {
     # produced to the pipe. Otherwise, returns a `pipe:Error`
     public isolated function consume(decimal timeout, typedesc<any> typeParam = <>)
         returns typeParam|Error = @java:Method {
-        'class: "pipe.Pipe"
+        'class: "org.nuvindu.pipe.Pipe"
     } external;
 
     # Consumes events in the pipe as a `stream`
@@ -43,7 +43,7 @@ public class Pipe {
     # + return - Returns a `stream`. The stream type is inferred from the user specified type
     public isolated function consumeStream(decimal timeout, typedesc<any> typeParam = <>)
         returns stream<typeParam, error?> = @java:Method {
-        'class: "pipe.Pipe"
+        'class: "org.nuvindu.pipe.Pipe"
     } external;
 
     # Closes the pipe instantly.
@@ -68,21 +68,21 @@ public class Pipe {
 }
 
 isolated function newPipe(int 'limit) returns handle = @java:Constructor {
-    'class: "pipe.Pipe"
+    'class: "org.nuvindu.pipe.Pipe"
 } external;
 
 isolated function produce(handle pipe, any events, decimal timeout) returns Error? = @java:Method {
-    'class: "pipe.Pipe"
+    'class: "org.nuvindu.pipe.Pipe"
 } external;
 
 isolated function immediateClose(handle pipe) = @java:Method {
-    'class: "pipe.Pipe"
+    'class: "org.nuvindu.pipe.Pipe"
 } external;
 
 isolated function gracefulClose(handle pipe, decimal timeout) returns Error? = @java:Method {
-    'class: "pipe.Pipe"
+    'class: "org.nuvindu.pipe.Pipe"
 } external;
 
 isolated function isClosed(handle pipe) returns boolean = @java:Method {
-    'class: "pipe.Pipe"
+    'class: "org.nuvindu.pipe.Pipe"
 } external;

@@ -1,4 +1,4 @@
-package pipe;
+package org.nuvindu.pipe;
 
 import io.ballerina.runtime.api.PredefinedTypes;
 import io.ballerina.runtime.api.creators.TypeCreator;
@@ -19,8 +19,8 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import static org.nuvindu.pipe.runtime.utils.ModuleUtils.getModule;
-import static org.nuvindu.pipe.runtime.utils.Utils.createError;
+import static org.nuvindu.pipe.utils.ModuleUtils.getModule;
+import static org.nuvindu.pipe.utils.Utils.createError;
 
 /**
  * Provide APIs to exchange events concurrently.

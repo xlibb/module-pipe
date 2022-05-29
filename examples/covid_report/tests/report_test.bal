@@ -6,10 +6,11 @@ import ballerina/test;
     groups: ["pipe", "covid_report_example"]
 }
 function testPipeConcurrently() returns error? {
-    pipe:Pipe pipe = new (5);
+    pipe:Pipe pipe = new(5);
+    int expectedCount = 6;
     worker A {
-        foreach int i in 1..<5 {
-            error? produce = pipe.produce(i, timeout = 5.00111);
+        foreach int i in 1..<expectedCount {
+            error? produce = pipe.produce(i, timeout = 10.00111);
             if produce is error {
                 io:println(produce);
             }            
@@ -22,12 +23,13 @@ function testPipeConcurrently() returns error? {
     worker B {
         stream<int, error?> intStream = pipe.consumeStream(timeout = 10.12323);
         IntRecord|error? 'record = intStream.next();
-        int i = 1;
+        int i = 0;
         while 'record is IntRecord {
             test:assertEquals('record, i);
             i+=1;
             'record = intStream.next();
         }
+        test:assertEquals(expectedCount, i);
     }
 }
 
@@ -35,7 +37,7 @@ function testPipeConcurrently() returns error? {
     groups: ["pipe", "covid_report_example"]
 }
 function testPipeWithObjectsConcurrently() returns error? {
-    pipe:Pipe pipe = new (5);
+    pipe:Pipe pipe = new(5);
     Report report = {date:"20220514", positive: 663655, hospitalizedCurrently: 988,
                      hospitalizedTotal: 553467, deaths: 16511};
     worker A {
