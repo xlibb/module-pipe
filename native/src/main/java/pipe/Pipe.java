@@ -19,8 +19,8 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import static io.ballerina.runtime.pipe.utils.ModuleUtils.getModule;
-import static io.ballerina.runtime.pipe.utils.Utils.createError;
+import static org.nuvindu.pipe.runtime.utils.ModuleUtils.getModule;
+import static org.nuvindu.pipe.runtime.utils.Utils.createError;
 
 /**
  * Provide APIs to exchange events concurrently.

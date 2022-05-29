@@ -27,7 +27,7 @@ jobs:
                 run: |
                     git config --global user.name ${{ secrets.BALLERINA_BOT_USERNAME }}
                     git config --global user.email ${{ secrets.BALLERINA_BOT_EMAIL }}
-                    ./gradlew build -x check -x test -x :graphql-examples:build
+                    ./gradlew build -x check -x test -x :pipe-examples:build
 
             -   name: Create lib directory if not exists
                 run: mkdir -p ballerina/lib
@@ -75,5 +75,5 @@ jobs:
                 env:
                     GITHUB_TOKEN: ${{ secrets.BALLERINA_BOT_TOKEN }}
                 run: |
-                    gh release create v$VERSION --title "module-ballerina-graphql-v$VERSION"
+                    gh release create v$VERSION --title "module-pipe-v$VERSION"
                     gh pr create --title "[Automated] Sync master after $VERSION release" --body "Sync master after $VERSION release"

@@ -5,5 +5,5 @@ isolated function init() {
 }
 
 isolated function setModule() = @java:Method {
-    'class: "io.ballerina.runtime.pipe.utils.ModuleUtils"
+    'class: "org.nuvindu.pipe.runtime.utils.ModuleUtils"
 } external;

@@ -26,9 +26,10 @@ public class Pipe {
     # Consumes events in the pipe.
     #
     # + timeout - The maximum waiting period to consume events
-    # + typeParam - Default parameter that is used to infer the user specified type
+    # + typeParam - The `type` of data that is needed to be consumed. When not provided, the type is inferred 
+    # using the expected type from the function
     # + return - Return type is inferred from the user specified type. That should be the same event type
-    #            produced to the pipe. Otherwise, returns a `pipe:Error`
+    # produced to the pipe. Otherwise, returns a `pipe:Error`
     public isolated function consume(decimal timeout, typedesc<any> typeParam = <>)
         returns typeParam|Error = @java:Method {
         'class: "pipe.Pipe"
@@ -37,7 +38,8 @@ public class Pipe {
     # Consumes events in the pipe as a `stream`
     #
     # + timeout - The maximum waiting period to consume events
-    # + typeParam - Default parameter that is used to infer the user specified type
+    # + typeParam - The `type` of data that is needed to be consumed. When not provided, the type is inferred 
+    # using the expected type from the function
     # + return - Returns a `stream`. The stream type is inferred from the user specified type
     public isolated function consumeStream(decimal timeout, typedesc<any> typeParam = <>)
         returns stream<typeParam, error?> = @java:Method {
@@ -58,7 +60,7 @@ public class Pipe {
     }
 
     # Checks whether the pipe is closed.
-    # 
+    #
     # + return - Returns `true`, if the pipe is closed. Otherwise returns `false`
     public isolated function isClosed() returns boolean {
         return isClosed(self.javaPipeObject);

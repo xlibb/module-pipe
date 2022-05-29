@@ -1,4 +1,4 @@
-package io.ballerina.runtime.pipe.utils;
+package org.nuvindu.pipe.runtime.utils;
 import io.ballerina.runtime.api.Environment;
 import io.ballerina.runtime.api.Module;
 

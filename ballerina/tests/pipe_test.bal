@@ -5,14 +5,10 @@ import ballerina/test;
 }
 function testPipe() returns error? {
     Pipe pipe = new(5);
-    error? produce = pipe.produce("pipe_test", timeout = 2);
-    if produce !is error {
-        string|error actualValue = pipe.consume(5);
-        string expectedValue = "pipe_test";
-        if actualValue !is error? {
-            test:assertEquals(expectedValue, actualValue);
-        }
-    }
+    check pipe.produce("pipe_test", timeout = 2);
+    string actualValue = check pipe.consume(5);
+    string expectedValue = "pipe_test";
+    test:assertEquals(expectedValue, actualValue);
 }
 
 @test:Config {
@@ -21,16 +17,14 @@ function testPipe() returns error? {
 function testPipeWithRecords() returns error? {
     Pipe pipe = new(5);
     MovieRecord movieRecord = {name: "The Trial of the Chicago 7", director: "Aaron Sorkin"};
-    error? produce = pipe.produce(movieRecord, timeout = 5);
-    if produce !is error {
-        stream<MovieRecord, error?> 'stream = pipe.consumeStream(5);
-        record{|MovieRecord value;|}|error? actualValue = 'stream.next();
-        if actualValue is error? {
-            return actualValue;
-        }
-        MovieRecord expectedValue = movieRecord;
-        test:assertEquals(expectedValue, actualValue.value);
+    check pipe.produce(movieRecord, timeout = 5);
+    stream<MovieRecord, error?> 'stream = pipe.consumeStream(5);
+    record {|MovieRecord value;|}|error? actualValue = 'stream.next();
+    if actualValue is error? {
+        return actualValue;
     }
+    MovieRecord expectedValue = movieRecord;
+    test:assertEquals(expectedValue, actualValue.value);
 }
 
 @test:Config {
@@ -43,7 +37,7 @@ function testPipeStream() returns error? {
     stream<string, error?> 'stream = pipe.consumeStream(timeout = 5);
     foreach int i in 1 ..< 3 {
         string expectedValue = i.toString();
-        record {| string value; |}? data = check 'stream.next();
+        record {|string value;|}? data = check 'stream.next();
         if data != () {
             string actualValue = data.value;
             test:assertEquals(expectedValue, actualValue);
@@ -56,7 +50,7 @@ function testPipeStream() returns error? {
     if actualValue is Error {
         test:assertEquals(actualValue.message(), expectedValue);
     }
-    record {| string value; |}|error? nextValue = 'stream.next();
+    record {|string value;|}|error? nextValue = 'stream.next();
     test:assertTrue(nextValue is Error, "Error was not produced while consuming events from a closed and empty pipe.");
     expectedValue = "Events cannot be consumed after the stream is closed";
     if nextValue is Error {
@@ -74,7 +68,7 @@ function testImmediateClose() returns error? {
     pipe.immediateClose();
     string expectedValue = "No any events is available in the closed pipe.";
     string|Error actualValue = pipe.consume(5);
-    test:assertTrue(actualValue is Error, 
+    test:assertTrue(actualValue is Error,
                     "Error was not produced while consuming events from a closed and empty pipe.");
     if actualValue is Error {
         test:assertEquals(actualValue.message(), expectedValue);

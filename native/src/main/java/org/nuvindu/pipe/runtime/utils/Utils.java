@@ -1,10 +1,10 @@
-package io.ballerina.runtime.pipe.utils;
+package org.nuvindu.pipe.runtime.utils;
 
 import io.ballerina.runtime.api.creators.ErrorCreator;
 import io.ballerina.runtime.api.utils.StringUtils;
 import io.ballerina.runtime.api.values.BError;
 
-import static io.ballerina.runtime.pipe.utils.ModuleUtils.getModule;
+import static org.nuvindu.pipe.runtime.utils.ModuleUtils.getModule;
 
 /**
  *  This class contains utility methods for the Pipe module.
