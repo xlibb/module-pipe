@@ -1,5 +1,4 @@
 import nuvindu/pipe;
-import ballerina/io;
 import ballerina/test;
 
 @test:Config {
@@ -11,9 +10,7 @@ function testPipeConcurrently() returns error? {
     worker A {
         foreach int i in 1..<expectedCount {
             error? produce = pipe.produce(i, timeout = 10.00111);
-            if produce is error {
-                io:println(produce);
-            }            
+            test:assertTrue(produce !is error);
         }
     }
 
@@ -42,9 +39,7 @@ function testPipeWithObjectsConcurrently() returns error? {
                      hospitalizedTotal: 553467, deaths: 16511};
     worker A {
         error? produce = pipe.produce(report, timeout = 5.00111);
-        if produce is error {
-            io:println(produce);
-        }
+        test:assertTrue(produce !is error);
     }
 
     @strand {

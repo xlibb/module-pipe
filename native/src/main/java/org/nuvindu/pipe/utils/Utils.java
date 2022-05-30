@@ -20,8 +20,4 @@ public class Utils {
     public static BError createError(String message) {
         return ErrorCreator.createError(getModule(), ERROR_TYPE, StringUtils.fromString(message), null, null);
     }
-
-    public static BError createError(String message, BError cause) {
-        return ErrorCreator.createError(getModule(), ERROR_TYPE, StringUtils.fromString(message), cause, null);
-    }
 }
