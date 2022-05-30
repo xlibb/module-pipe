@@ -22,10 +22,16 @@ public class ResultIterator {
 
     public static BError close(BObject streamGenerator) {
         BDecimal timeOut = (BDecimal) streamGenerator.getNativeData(Constants.TIME_OUT);
-        if (((Pipe) streamGenerator.getNativeData(Constants.NATIVE_PIPE)).gracefulClose(timeOut) != null) {
-            return createError("Failed to gracefully closed the pipe.");
+        Pipe pipe = ((Pipe) streamGenerator.getNativeData(Constants.NATIVE_PIPE));
+        if (pipe == null) {
+            return createError("Failed to close the stream.", 
+                               createError("Closing of a closed pipe is not allowed."));
         }
-        streamGenerator.addNativeData(Constants.NATIVE_PIPE, null);
-        return null;
+        BError gracefulClose = pipe.gracefulClose(timeOut);
+        if (gracefulClose == null) {
+            streamGenerator.addNativeData(Constants.NATIVE_PIPE, null);
+            return gracefulClose;
+        }
+        return createError("Failed to close the stream.", gracefulClose);
     }
 }

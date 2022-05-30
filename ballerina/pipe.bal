@@ -47,8 +47,9 @@ public class Pipe {
     } external;
 
     # Closes the pipe instantly.
-    public isolated function immediateClose() {
-        immediateClose(self.javaPipeObject);
+    # + return - Return `()`, if the pipe is successfully closed. Otherwise returns a `pipe:Error`
+    public isolated function immediateClose() returns Error? {
+        check immediateClose(self.javaPipeObject);
     }
 
     # Closes the pipe gracefully. Waits for some grace period until all the events in the pipe is consumed.
@@ -75,7 +76,7 @@ isolated function produce(handle pipe, any events, decimal timeout) returns Erro
     'class: "org.nuvindu.pipe.Pipe"
 } external;
 
-isolated function immediateClose(handle pipe) = @java:Method {
+isolated function immediateClose(handle pipe) returns Error? = @java:Method {
     'class: "org.nuvindu.pipe.Pipe"
 } external;
 

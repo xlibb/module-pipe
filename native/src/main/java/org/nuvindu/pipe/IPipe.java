@@ -9,6 +9,6 @@ import io.ballerina.runtime.api.values.BError;
 public interface IPipe {
     public BError produce(Object events, BDecimal timeout);
     public boolean isClosed();
-    public void immediateClose();
+    public BError immediateClose();
     public BError gracefulClose(BDecimal timeou);
 }

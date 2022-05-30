@@ -8,7 +8,7 @@ function testPipeConcurrently() returns error? {
     pipe:Pipe pipe = new(5);
     int expectedCount = 6;
     worker A {
-        foreach int i in 1..<expectedCount {
+        foreach int i in 1 ..< expectedCount {
             error? produce = pipe.produce(i, timeout = 10.00111);
             test:assertTrue(produce !is error);
         }
@@ -23,7 +23,7 @@ function testPipeConcurrently() returns error? {
         int i = 0;
         while 'record is IntRecord {
             test:assertEquals('record, i);
-            i+=1;
+            i += 1;
             'record = intStream.next();
         }
         test:assertEquals(expectedCount, i);
@@ -35,8 +35,13 @@ function testPipeConcurrently() returns error? {
 }
 function testPipeWithObjectsConcurrently() returns error? {
     pipe:Pipe pipe = new(5);
-    Report report = {date:"20220514", positive: 663655, hospitalizedCurrently: 988,
-                     hospitalizedTotal: 553467, deaths: 16511};
+    Report report = {
+        date: "20220514",
+        positive: 663655,
+        hospitalizedCurrently: 988,
+        hospitalizedTotal: 553467,
+        deaths: 16511
+    };
     worker A {
         error? produce = pipe.produce(report, timeout = 5.00111);
         test:assertTrue(produce !is error);

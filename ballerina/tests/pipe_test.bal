@@ -1,3 +1,4 @@
+import ballerina/lang.runtime;
 import ballerina/test;
 
 @test:Config {
@@ -56,7 +57,7 @@ function testPipeStream() returns error? {
 function testImmediateClose() returns error? {
     Pipe pipe = new(5);
     check pipe.produce("1", timeout = 5);
-    pipe.immediateClose();
+    check pipe.immediateClose();
     string expectedValue = "No any events is available in the closed pipe.";
     string|Error actualValue = pipe.consume(5);
     test:assertTrue(actualValue is Error,
@@ -69,6 +70,7 @@ function testImmediateClose() returns error? {
 }
 function testGracefulClose() returns error? {
     Pipe pipe = new(5);
+    check pipe.produce("1", timeout = 5);
     check pipe.gracefulClose();
     string expectedValue = "Events cannot be produced to a closed pipe.";
     Error? actualValue = pipe.produce("1", timeout = 5);
@@ -86,6 +88,22 @@ function testIsClosedInPipe() returns error? {
     check pipe.gracefulClose();
     test:assertTrue(pipe.isClosed(), expectedValue);
     Pipe newPipe = new(5);
-    newPipe.immediateClose();
+    check newPipe.immediateClose();
     test:assertTrue(pipe.isClosed(), expectedValue);
+}
+
+@test:Config {
+    groups: ["pipe"]
+}
+function testWaitingInGracefulClose() returns error? {
+    Pipe pipe = new(5);
+    check pipe.produce("1", timeout = 5);
+    worker A {
+        test:assertTrue(pipe.gracefulClose() == ());
+    }
+    worker B {
+        runtime:sleep(5);
+        string|Error value = pipe.consume(5);
+        test:assertTrue(value is string);
+    }
 }

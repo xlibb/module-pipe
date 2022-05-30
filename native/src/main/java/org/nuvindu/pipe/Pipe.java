@@ -89,13 +89,20 @@ public class Pipe implements IPipe {
     }
 
     @Override
-    public void immediateClose() {
+    public BError immediateClose() {
+        if (this.isClosed) {
+            return createError("Closing of a closed pipe is not allowed.");
+        }
         this.isClosed = true;
         this.queue = null;
+        return null;
     }
 
     @Override
     public BError gracefulClose(BDecimal timeout) {
+        if (this.isClosed) {
+            return createError("Closing of a closed pipe is not allowed.");
+        }
         this.isClosed = true;
         lock.lock();
         try {
