@@ -1,4 +1,3 @@
-import ballerina/lang.runtime;
 import ballerina/test;
 
 @test:Config {
@@ -43,10 +42,10 @@ function testPipeStream() returns error? {
     check 'stream.close();
     string expectedValue = "Events cannot be produced to a closed pipe.";
     Error? actualValue = pipe.produce("1", timeout = 5);
-    test:assertTrue(actualValue is Error, "Error was not produced while producing events to a closed pipe.");
+    test:assertTrue(actualValue is Error);
     test:assertEquals((<Error>actualValue).message(), expectedValue);
     record {|string value;|}|error? nextValue = 'stream.next();
-    test:assertTrue(nextValue is Error, "Error was not produced while consuming events from a closed and empty pipe.");
+    test:assertTrue(nextValue is Error);
     expectedValue = "Events cannot be consumed after the stream is closed";
     test:assertEquals((<Error>nextValue).message(), expectedValue);
 }
@@ -60,8 +59,7 @@ function testImmediateClose() returns error? {
     check pipe.immediateClose();
     string expectedValue = "No any events is available in the closed pipe.";
     string|Error actualValue = pipe.consume(5);
-    test:assertTrue(actualValue is Error,
-                    "Error was not produced while consuming events from a closed and empty pipe.");
+    test:assertTrue(actualValue is Error);
     test:assertEquals((<Error>actualValue).message(), expectedValue);
 }
 
@@ -74,7 +72,7 @@ function testGracefulClose() returns error? {
     check pipe.gracefulClose();
     string expectedValue = "Events cannot be produced to a closed pipe.";
     Error? actualValue = pipe.produce("1", timeout = 5);
-    test:assertTrue(actualValue is Error, "Error was not produced while producing events to a closed pipe.");
+    test:assertTrue(actualValue is Error);
     test:assertEquals((<Error>actualValue).message(), expectedValue);
 }
 
@@ -83,26 +81,10 @@ function testGracefulClose() returns error? {
 }
 function testIsClosedInPipe() returns error? {
     Pipe pipe = new(5);
-    string expectedValue = "Assertion failed for 'isClosed()' method";
-    test:assertTrue(!pipe.isClosed(), expectedValue);
+    test:assertTrue(!pipe.isClosed());
     check pipe.gracefulClose();
-    test:assertTrue(pipe.isClosed(), expectedValue);
+    test:assertTrue(pipe.isClosed());
     Pipe newPipe = new(5);
     check newPipe.immediateClose();
-    test:assertTrue(pipe.isClosed(), expectedValue);
-}
-
-@test:Config {
-    groups: ["pipe"]
-}
-function testWaitingInGracefulClose() returns error? {
-    Pipe pipe = new(5);
-    worker A {
-        test:assertTrue(pipe.gracefulClose() == ());
-    }
-    worker B {
-        runtime:sleep(5);
-        string|Error value = pipe.consume(5);
-        test:assertTrue(value is Error);
-    }
+    test:assertTrue(pipe.isClosed());
 }

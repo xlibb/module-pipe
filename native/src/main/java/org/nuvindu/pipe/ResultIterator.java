@@ -30,7 +30,7 @@ public class ResultIterator {
         BError gracefulClose = pipe.gracefulClose(timeOut);
         if (gracefulClose == null) {
             streamGenerator.addNativeData(Constants.NATIVE_PIPE, null);
-            return gracefulClose;
+            return null;
         }
         return createError("Failed to close the stream.", gracefulClose);
     }
