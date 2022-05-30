@@ -97,13 +97,12 @@ function testIsClosedInPipe() returns error? {
 }
 function testWaitingInGracefulClose() returns error? {
     Pipe pipe = new(5);
-    check pipe.produce("1", timeout = 5);
     worker A {
         test:assertTrue(pipe.gracefulClose() == ());
     }
     worker B {
         runtime:sleep(5);
         string|Error value = pipe.consume(5);
-        test:assertTrue(value is string);
+        test:assertTrue(value is Error);
     }
 }
