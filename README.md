@@ -1,7 +1,10 @@
 Ballerina Pipe Library
 ===================
 
+  [![Build](https://github.com/Nuvindu/module-pipe/actions/workflows/build-timestamped-master.yml/badge.svg)](https://github.com/Nuvindu/module-pipe/actions/workflows/build-timestamped-master.yml)
+  [![codecov](https://codecov.io/gh/Nuvindu/module-pipe/branch/main/graph/badge.svg)](https://codecov.io/gh/Nuvindu/module-pipe)
   [![GitHub Last Commit](https://img.shields.io/github/last-commit/Nuvindu/module-pipe.svg)](https://github.com/Nuvindu/module-pipe/commits/main)
+  [![Github issues](https://img.shields.io/github/issues/Nuvindu/module-pipe/module/pipe.svg?label=Open%20Issues)](https://github.com/Nuvindu/module-pipe/labels/module%2Fpipe)
 
 ## Build from the source
 
@@ -21,7 +24,7 @@ Ballerina Pipe Library
 
 ### Build the source
 
-Execute the commands below to build from source.
+Execute the commands below to build from the source.
 
 1. To build the library:
    ```    

@@ -4,19 +4,19 @@ import ballerina/log;
 import ballerina/lang.runtime;
 
 public function main() returns error? {
-    pipe:Pipe pipe = new(5);
+    pipe:Pipe pipe = new (5);
     Report[] reports = check getReportData();
     worker A {
         foreach Report report in reports {
             error? produce = pipe.produce(report, timeout = 5);
             if produce is error {
-                io:println(produce);
+                log:printError("Error occurred while producing data to the pipe", produce);
             }
             runtime:sleep(1);
         }
         error? gracefulClose = pipe.gracefulClose();
         if gracefulClose is error {
-            log:printError(gracefulClose.message(), gracefulClose);
+            log:printError("Error occurred while closing the pipe gracefully", gracefulClose);
         }
     }
 

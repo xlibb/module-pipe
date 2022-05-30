@@ -53,7 +53,7 @@ public class Pipe {
 
     # Closes the pipe gracefully. Waits for some grace period until all the events in the pipe is consumed.
     #
-    # + timeout - The maximum grace period to wait until the pipe is empty
+    # + timeout - The maximum grace period to wait until the pipe is empty. The default timeout is thirty seconds
     # + return - Return `()`, if the pipe is successfully closed. Otherwise returns a `pipe:Error`
     public isolated function gracefulClose(decimal timeout = 30) returns Error? {
         check gracefulClose(self.javaPipeObject, timeout);
