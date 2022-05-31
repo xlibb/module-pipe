@@ -8,11 +8,8 @@ class StreamGenerator {
     }
 
     public isolated function next() returns record {|any value;|}|Error? {
-        any|Error streamValue = self.resultIterator.nextValue(self);
-        if streamValue is any {
-            return {value: streamValue};
-        }
-        return streamValue;
+        any streamValue = check self.resultIterator.nextValue(self);
+        return {value: streamValue};
     }
 
     public isolated function close() returns Error? {
