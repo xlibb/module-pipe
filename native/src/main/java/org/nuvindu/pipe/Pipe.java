@@ -63,7 +63,7 @@ public class Pipe implements IPipe {
 
     protected Object consumeData(BDecimal timeout) {
         if (this.queue == null) {
-            return createError("No any events is available in the closed pipe.");
+            return createError("No any event is available in the closed pipe.");
         }
         lock.lock();
         try {
