@@ -38,8 +38,10 @@ public class Pipe implements IPipe {
         this.limit = limit;
     }
 
-    @Override
-    public BError produce(Object events, BDecimal timeout) {
+    protected BError produceData(Object events, BDecimal timeout) {
+        if (events == null) {
+            return createError("Nil values cannot be produced to a pipe.");
+        }
         if (this.isClosed) {
             return createError("Events cannot be produced to a closed pipe.");
         }
@@ -135,6 +137,12 @@ public class Pipe implements IPipe {
     public static Object consume(BObject pipe, BDecimal timeout, BTypedesc typeParam) {
         BHandle handle = (BHandle) pipe.get(StringUtils.fromString(Constants.JAVA_PIPE_OBJECT));
         Pipe javaPipe = (Pipe) handle.getValue();
-        return (Object) javaPipe.consumeData(timeout);
+        return javaPipe.consumeData(timeout);
+    }
+
+    public static BError produce(BObject pipe, Object events, BDecimal timeout) {
+        BHandle handle = (BHandle) pipe.get(StringUtils.fromString(Constants.JAVA_PIPE_OBJECT));
+        Pipe javaPipe = (Pipe) handle.getValue();
+        return javaPipe.produceData(events, timeout);
     }
 }

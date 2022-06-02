@@ -1,13 +1,13 @@
 import ballerina/jballerina.java;
 
 # Consists of APIs to exchange events concurrently.
-public class Pipe {
+public isolated class Pipe {
     private handle javaPipeObject;
 
     # Creates a new `pipe:Pipe` instance.
     #
-    # + 'limit - The maximum number of entries that holds in the pipe at once
-    public function init(int 'limit) {
+    # + 'limit - The maximum number of entries that are held in the pipe at once
+    public isolated function init(int 'limit) {
         self.javaPipeObject = newPipe('limit);
     }
 
@@ -16,13 +16,10 @@ public class Pipe {
     # + events - Events that needs to be produced to the pipe. Can be `any` type
     # + timeout - The maximum waiting period that holds events
     # + return - Returns `()` if events is successfully produced. Otherwise returns a `pipe:Error`
-    public isolated function produce(any events, decimal timeout) returns Error? {
-        if events == () {
-            return error Error("Nil values cannot be produced to a pipe.");
-        }
-        check produce(self.javaPipeObject, events, timeout);
-    }
-
+    public isolated function produce(any events, decimal timeout) returns Error? = @java:Method {
+        'class: "org.nuvindu.pipe.Pipe"
+    } external;
+    
     # Consumes events in the pipe.
     #
     # + timeout - The maximum waiting period to consume events
@@ -49,7 +46,9 @@ public class Pipe {
     # Closes the pipe instantly.
     # + return - Return `()`, if the pipe is successfully closed. Otherwise returns a `pipe:Error`
     public isolated function immediateClose() returns Error? {
-        check immediateClose(self.javaPipeObject);
+        lock {
+            check immediateClose(self.javaPipeObject);
+        }
     }
 
     # Closes the pipe gracefully. Waits for some grace period until all the events in the pipe is consumed.
@@ -57,14 +56,18 @@ public class Pipe {
     # + timeout - The maximum grace period to wait until the pipe is empty. The default timeout is thirty seconds
     # + return - Return `()`, if the pipe is successfully closed. Otherwise returns a `pipe:Error`
     public isolated function gracefulClose(decimal timeout = 30) returns Error? {
-        check gracefulClose(self.javaPipeObject, timeout);
+        lock {
+            check gracefulClose(self.javaPipeObject, timeout);
+        }
     }
 
     # Checks whether the pipe is closed.
     #
     # + return - Returns `true`, if the pipe is closed. Otherwise returns `false`
     public isolated function isClosed() returns boolean {
-        return isClosed(self.javaPipeObject);
+        lock {
+            return isClosed(self.javaPipeObject);
+        }   
     }
 }
 

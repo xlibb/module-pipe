@@ -7,7 +7,3 @@ isolated function init() {
 isolated function setModule() = @java:Method {
     'class: "org.nuvindu.pipe.utils.ModuleUtils"
 } external;
-
-public isolated function getModule() returns handle = @java:Method {
-    'class: "org.nuvindu.pipe.utils.ModuleUtils"
-} external;
