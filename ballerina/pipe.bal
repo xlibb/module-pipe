@@ -75,10 +75,6 @@ isolated function newPipe(int 'limit) returns handle = @java:Constructor {
     'class: "org.nuvindu.pipe.Pipe"
 } external;
 
-isolated function produce(handle pipe, any events, decimal timeout) returns Error? = @java:Method {
-    'class: "org.nuvindu.pipe.Pipe"
-} external;
-
 isolated function immediateClose(handle pipe) returns Error? = @java:Method {
     'class: "org.nuvindu.pipe.Pipe"
 } external;
