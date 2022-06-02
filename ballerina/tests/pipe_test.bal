@@ -57,7 +57,7 @@ function testImmediateClose() returns error? {
     Pipe pipe = new(5);
     check pipe.produce("1", timeout = 5);
     check pipe.immediateClose();
-    string expectedValue = "No any events is available in the closed pipe.";
+    string expectedValue = "No any event is available in the closed pipe.";
     string|Error actualValue = pipe.consume(5);
     test:assertTrue(actualValue is Error);
     test:assertEquals((<Error>actualValue).message(), expectedValue);
