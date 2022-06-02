@@ -41,8 +41,7 @@ public class Pipe implements IPipe {
     protected BError produceData(Object events, BDecimal timeout) {
         if (events == null) {
             return createError("Nil values cannot be produced to a pipe.");
-        }
-        if (this.isClosed) {
+        } else if (this.isClosed) {
             return createError("Events cannot be produced to a closed pipe.");
         }
         lock.lock();

@@ -19,7 +19,7 @@ public isolated class Pipe {
     public isolated function produce(any events, decimal timeout) returns Error? = @java:Method {
         'class: "org.nuvindu.pipe.Pipe"
     } external;
-    
+
     # Consumes events in the pipe.
     #
     # + timeout - The maximum waiting period to consume events
@@ -67,7 +67,7 @@ public isolated class Pipe {
     public isolated function isClosed() returns boolean {
         lock {
             return isClosed(self.javaPipeObject);
-        }   
+        }
     }
 }
 
