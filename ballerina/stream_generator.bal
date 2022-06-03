@@ -3,7 +3,7 @@ import ballerina/jballerina.java;
 class StreamGenerator {
     ResultIterator resultIterator;
 
-    public isolated function init(ResultIterator resultIterator) {
+    isolated function init(ResultIterator resultIterator) {
         self.resultIterator = resultIterator;
     }
 
@@ -17,7 +17,7 @@ class StreamGenerator {
     }
 }
 
-public class ResultIterator {
+class ResultIterator {
 
     isolated function nextValue(StreamGenerator streamGenerator) returns any|Error = @java:Method {
         'class: "org.nuvindu.pipe.ResultIterator"
