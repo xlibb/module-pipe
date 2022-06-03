@@ -48,8 +48,8 @@ jobs:
                 run: echo "VERSION=$((grep -w 'version' | cut -d= -f2) < gradle.properties | rev | cut --complement -d- -f1 | rev)" >> $GITHUB_ENV
 
             -   name: Pre release dependency version update
-                env:
-                    GITHUB_TOKEN: ${{ secrets.BALLERINA_BOT_TOKEN }}
+
+
                 run: |
                     echo "Version: ${VERSION}"
                     git checkout -b release-${VERSION}
@@ -64,7 +64,7 @@ jobs:
 
             -   name: Publish Package
                 env:
-                    GITHUB_TOKEN: ${{ secrets.BALLERINA_BOT_TOKEN }}
+
                     BALLERINA_CENTRAL_ACCESS_TOKEN: ${{ secrets.BALLERINA_CENTRAL_ACCESS_TOKEN }}
                     packageUser: ${{ secrets.BALLERINA_BOT_USERNAME }}
                     packagePAT: ${{ secrets.BALLERINA_BOT_TOKEN }}
@@ -75,8 +75,7 @@ jobs:
                     ./gradlew -Pversion=${VERSION} publish -x test -PpublishToCentral=true
 
             -   name: GitHub Release and Release Sync PR
-                env:
-                    GITHUB_TOKEN: ${{ secrets.BALLERINA_BOT_TOKEN }}
+
                 run: |
                     gh release create v$VERSION --title "module-pipe-v$VERSION"
                     gh pr create --title "[Automated] Sync master after $VERSION release" --body "Sync master after $VERSION release"
