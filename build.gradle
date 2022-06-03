@@ -1,7 +1,25 @@
+plugins {
+    id "com.github.spotbugs-base"
+    id "com.github.johnrengelman.shadow"
+    id "de.undercouch.download"
+    id "net.researchgate.release"
+}
+
+ext.ballerinaLangVersion = project.ballerinaLangVersion
+
 allprojects {
-    apply plugin : "maven-publish"
+    group = project.group
+    version = project.version
+
+    apply plugin: 'jacoco'
+    apply plugin: 'maven-publish'
+
     repositories {
         mavenLocal()
+        maven {
+            url = 'https://repo.maven.apache.org/maven2'
+        }
+
         maven {
             url = 'https://maven.pkg.github.com/ballerina-platform/*'
             credentials {
@@ -9,25 +27,47 @@ allprojects {
                 password System.getenv("packagePAT")
             }
         }
-
     }
-}
 
-
-task build {
-    dependsOn(":native:build")
-    dependsOn(":ballerina:build")
-
+    ext {
+        snapshotVersion= '-SNAPSHOT'
+        timestampedVersionRegex = '.*-\\d{8}-\\d{6}-\\w.*\$'
+    }
 }
 
 subprojects {
-    configurations {
-        ballerinaToolsPlugin
-    }
-    dependencies {
-        ballerinaToolsPlugin("org.ballerinalang:jballerina-tools:${ballerinaLangVersion}") {
-            transitive = false
-        }
 
+    configurations {
+        ballerinaStdLibs
     }
+
+    dependencies {
+        /* Standard libraries */
+        ballerinaStdLibs "io.ballerina.stdlib:io-ballerina:${project.stdlibIoVersion}"
+        ballerinaStdLibs "io.ballerina.stdlib:log-ballerina:${project.stdlibLogVersion}"
+        ballerinaStdLibs "io.ballerina.stdlib:observe-ballerina:${observeVersion}"
+        ballerinaStdLibs "io.ballerina:observe-ballerina:${observeInternalVersion}"
+    }
+}
+
+def moduleVersion = project.version.replace("-SNAPSHOT", "")
+
+release {
+    failOnPublishNeeded = false
+
+    buildTasks = ["build"]
+    failOnSnapshotDependencies = true
+    versionPropertyFile = 'gradle.properties'
+    tagTemplate = 'v$version'
+
+    git {
+        requireBranch = "release-${moduleVersion}"
+        pushToRemote = 'origin'
+    }
+}
+
+task build {
+    dependsOn(':pipe-examples:build')
+    dependsOn(':pipe-native:build')
+    dependsOn(':pipe-ballerina:build')
 }
