@@ -1,7 +1,7 @@
 import ballerina/test;
 
 @test:Config {
-    groups: ["pipe", "errors"]
+    groups: ["errors"]
 }
 function testPipeWithNullValues() returns error? {
     Pipe pipe = new(1);
@@ -13,7 +13,7 @@ function testPipeWithNullValues() returns error? {
 }
 
 @test:Config {
-    groups: ["pipe", "errors"]
+    groups: ["errors"]
 }
 function testTimeoutErrorsInProduce() returns error? {
     Pipe pipe = new (1);
@@ -26,7 +26,7 @@ function testTimeoutErrorsInProduce() returns error? {
 }
 
 @test:Config {
-    groups: ["pipe", "errors"]
+    groups: ["errors"]
 }
 function testTimeoutErrorsInConsume() returns error? {
     Pipe pipe = new (1);
@@ -38,7 +38,7 @@ function testTimeoutErrorsInConsume() returns error? {
 }
 
 @test:Config {
-    groups: ["pipe", "errors"]
+    groups: ["errors"]
 }
 function testImmediateClosingOfClosedPipe() returns error? {
     Pipe pipe = new (1);
@@ -51,7 +51,7 @@ function testImmediateClosingOfClosedPipe() returns error? {
 }
 
 @test:Config {
-    groups: ["pipe", "errors"]
+    groups: ["errors"]
 }
 function testGracefulClosingOfClosedPipe() returns error? {
     Pipe pipe = new (1);
@@ -64,7 +64,7 @@ function testGracefulClosingOfClosedPipe() returns error? {
 }
 
 @test:Config {
-    groups: ["pipe", "errors"]
+    groups: ["errors"]
 }
 function testClosingOfClosedStreamInPipe() returns error? {
     Pipe pipe = new (1);

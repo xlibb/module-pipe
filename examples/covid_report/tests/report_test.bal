@@ -2,7 +2,7 @@ import nuvindu/pipe;
 import ballerina/test;
 
 @test:Config {
-    groups: ["pipe", "covid_report_example"]
+    groups: ["pipe", "examples", "covid_report"]
 }
 function testPipeConcurrently() returns error? {
     pipe:Pipe pipe = new(5);
@@ -31,7 +31,7 @@ function testPipeConcurrently() returns error? {
 }
 
 @test:Config {
-    groups: ["pipe", "covid_report_example"]
+    groups: ["pipe", "examples", "covid_report"]
 }
 function testPipeWithObjectsConcurrently() returns error? {
     pipe:Pipe pipe = new(5);
