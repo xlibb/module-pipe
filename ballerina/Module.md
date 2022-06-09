@@ -1,6 +1,6 @@
-## Package Overview
+## Overview
 
-This package provides APIs to simultaneously send and receive data. And it includes an API to return data as a stream.
+This module provides APIs to simultaneously send and receive data. And it includes an API to return data as a stream.
 
 ### Pipe
 
