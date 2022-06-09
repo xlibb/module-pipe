@@ -9,8 +9,8 @@ function testPipeConcurrently() returns error? {
     int expectedCount = 6;
     worker A {
         foreach int i in 1 ..< expectedCount {
-            error? produce = pipe.produce(i, timeout = 10.00111);
-            test:assertTrue(produce !is error);
+            pipe:Error? produce = pipe.produce(i, timeout = 10.00111);
+            test:assertTrue(produce !is pipe:Error);
         }
     }
 
@@ -43,8 +43,8 @@ function testPipeWithObjectsConcurrently() returns error? {
         deaths: 16511
     };
     worker A {
-        error? produce = pipe.produce(report, timeout = 5.00111);
-        test:assertTrue(produce !is error);
+        pipe:Error? produce = pipe.produce(report, timeout = 5.00111);
+        test:assertTrue(produce !is pipe:Error);
     }
 
     @strand {

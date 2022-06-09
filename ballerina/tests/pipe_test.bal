@@ -1,4 +1,5 @@
 import ballerina/test;
+import ballerina/lang.runtime;
 
 @test:Config {
     groups: ["pipe"]
@@ -87,4 +88,33 @@ function testIsClosedInPipe() returns error? {
     Pipe newPipe = new(5);
     check newPipe.immediateClose();
     test:assertTrue(pipe.isClosed());
+}
+
+@test:Config {
+    groups: ["pipe"]
+}
+function testWaitingInGracefulClose() returns error? {
+    Pipe pipe = new(5);
+    int expectedValue = 1;
+    check pipe.produce(expectedValue, timeout = 5.00111);
+    worker A {
+        runtime:sleep(5);
+        int|Error actualValue = pipe.consume(timeout = 5);
+        int|Error actualError = pipe.consume(timeout = 5);
+
+        test:assertTrue(actualValue !is Error);
+        test:assertEquals(actualValue, expectedValue);
+
+        string expectedErrorMessage = "Operation has timed out.";
+        test:assertTrue(actualError is Error);
+        string actualErrorMessage = (<error>actualError).message();
+        test:assertEquals(actualErrorMessage, expectedErrorMessage);
+    }
+    @strand {
+        thread: "any"
+    }
+    worker B {
+        Error? close = pipe.gracefulClose();
+        test:assertTrue(close !is Error);
+    }
 }

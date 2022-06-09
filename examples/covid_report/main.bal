@@ -8,14 +8,14 @@ public function main() returns error? {
     Report[] reports = check getReportData();
     worker A {
         foreach Report report in reports {
-            error? produce = pipe.produce(report, timeout = 5);
-            if produce is error {
+            pipe:Error? produce = pipe.produce(report, timeout = 5);
+            if produce is pipe:Error {
                 log:printError("Error occurred while producing data to the pipe", produce);
             }
             runtime:sleep(1);
         }
-        error? gracefulClose = pipe.gracefulClose();
-        if gracefulClose is error {
+        pipe:Error? gracefulClose = pipe.gracefulClose();
+        if gracefulClose is pipe:Error {
             log:printError("Error occurred while closing the pipe gracefully", gracefulClose);
         }
     }
