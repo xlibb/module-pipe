@@ -20,7 +20,6 @@ import io.ballerina.runtime.api.PredefinedTypes;
 import io.ballerina.runtime.api.creators.TypeCreator;
 import io.ballerina.runtime.api.creators.ValueCreator;
 import io.ballerina.runtime.api.types.UnionType;
-import io.ballerina.runtime.api.utils.StringUtils;
 import io.ballerina.runtime.api.values.BDecimal;
 import io.ballerina.runtime.api.values.BError;
 import io.ballerina.runtime.api.values.BHandle;
@@ -36,6 +35,11 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import static org.nuvindu.pipe.utils.ModuleUtils.getModule;
+import static org.nuvindu.pipe.utils.Utils.JAVA_PIPE_OBJECT;
+import static org.nuvindu.pipe.utils.Utils.NATIVE_PIPE;
+import static org.nuvindu.pipe.utils.Utils.RESULT_ITERATOR;
+import static org.nuvindu.pipe.utils.Utils.STREAM_GENERATOR;
+import static org.nuvindu.pipe.utils.Utils.TIME_OUT;
 import static org.nuvindu.pipe.utils.Utils.createError;
 
 /**
@@ -139,24 +143,23 @@ public class Pipe implements IPipe {
 
     public static BStream consumeStream(BObject pipe, BDecimal timeout, BTypedesc typeParam) {
         UnionType typeUnion = TypeCreator.createUnionType(PredefinedTypes.TYPE_NULL, PredefinedTypes.TYPE_ERROR);
-        BObject resultIterator = ValueCreator.createObjectValue(getModule(), Constants.RESULT_ITERATOR);
-        BObject streamGenerator = ValueCreator.createObjectValue(getModule(),
-                                                                 Constants.STREAM_GENERATOR, resultIterator);
-        BHandle handle = (BHandle) pipe.get(StringUtils.fromString(Constants.JAVA_PIPE_OBJECT));
-        streamGenerator.addNativeData(Constants.NATIVE_PIPE, handle.getValue());
-        streamGenerator.addNativeData(Constants.TIME_OUT, timeout);
+        BObject resultIterator = ValueCreator.createObjectValue(getModule(), RESULT_ITERATOR);
+        BObject streamGenerator = ValueCreator.createObjectValue(getModule(), STREAM_GENERATOR, resultIterator);
+        BHandle handle = (BHandle) pipe.get(JAVA_PIPE_OBJECT);
+        streamGenerator.addNativeData(NATIVE_PIPE, handle.getValue());
+        streamGenerator.addNativeData(TIME_OUT, timeout);
         return ValueCreator.createStreamValue(TypeCreator.createStreamType(typeParam.getDescribingType(), typeUnion),
                                               streamGenerator);
     }
 
     public static Object consume(BObject pipe, BDecimal timeout, BTypedesc typeParam) {
-        BHandle handle = (BHandle) pipe.get(StringUtils.fromString(Constants.JAVA_PIPE_OBJECT));
+        BHandle handle = (BHandle) pipe.get(JAVA_PIPE_OBJECT);
         Pipe javaPipe = (Pipe) handle.getValue();
         return javaPipe.consumeData(timeout);
     }
 
     public static BError produce(BObject pipe, Object events, BDecimal timeout) {
-        BHandle handle = (BHandle) pipe.get(StringUtils.fromString(Constants.JAVA_PIPE_OBJECT));
+        BHandle handle = (BHandle) pipe.get(JAVA_PIPE_OBJECT);
         Pipe javaPipe = (Pipe) handle.getValue();
         return javaPipe.produceData(events, timeout);
     }
