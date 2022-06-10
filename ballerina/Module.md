@@ -8,7 +8,7 @@ The Pipe allows you to send data from one place to another. Following are the AP
 
 #### Create a `pipe:Pipe` instance
 
-A `pipe:Pipe` instance must be created first. It will be used as a channel to produce and consume data. Each `pipe:Pipe` has a limit indicating the number of entries it can hold at one time.
+A `pipe:Pipe` instance can be created as follows. It will be used as a channel to produce and consume data. Each `pipe:Pipe` has a limit indicating the number of entries it can hold at one time.
 
 ```ballerina
 import nuvindu/pipe;
