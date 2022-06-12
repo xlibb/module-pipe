@@ -1,82 +1,126 @@
 ## Overview
 
-This module provides APIs to simultaneously send and receive data. And it includes an API to return data as a stream.
+This module provides a medium to send and receive events simultaneously. And it includes APIs to produce, consume and return events via a stream.
 
-### Pipe
+## Pipe
 
-The Pipe allows you to send data from one place to another. Following are the APIs of the Pipe.
+The pipe allows you to send events from one place to another. The pipe can hold up to n number of data. In case the pipe is full, the `produce` method blocks until there is a free slot to produce data. On the other hand, in case the pipe is empty, the `consume` method blocks until there is some data to consume.
 
 #### Create a `pipe:Pipe` instance
 
-A `pipe:Pipe` instance can be created as follows. It will be used as a channel to produce and consume data. Each `pipe:Pipe` has a limit indicating the number of entries it can hold at one time.
+A `pipe:Pipe` instance can be created as follows. It will be used as a channel to produce and consume events. Each `pipe:Pipe` has a limit indicating the number of entries it can hold at one time.
 
 ```ballerina
 import nuvindu/pipe;
 
-pipe:Pipe pipe = new(limit = 10);
+public function main() returns error? {
+    pipe:Pipe pipe = new('limit = 10);
+}
 ```
 
-#### Produce Data
+### APIs associated with Pipe
 
-Events can be produced to the pipe using the following method. It allows `any` type of events and they can be added up to the given limit of the pipe. When the pipe is full, it will block further producing events to the pipe. And nil values are not allowed to be produced to a pipe. If data is successfully produced, the method will return `()`. Otherwise, it will return `pipe:Error`.
+- <b> produce </b>: Produces events into the pipe. If the pipe is full, it blocks further producing events.
+- <b> consume </b>: Consumes events in the pipe. If the pipe is empty, it blocks until events are available in the pipe.
+- <b> consumeStream </b>: Returns a stream. Events can be consumed by iterating the stream.
+- <b> immediateClose </b>: Closes the pipe instantly. All the events in the pipe will be discarded.
+- <b> gracefulClose </b>: Closes the pipe gracefully. A grace period is provided to consume available events in the pipe. After the period, all the events will be discarded.
+- <b> isClosed </b>: Returns the closing status of the pipe.
+
+#### Produce Events
+
+Events can be produced to the pipe using the following method. It allows `any` type of event and they can be added up to the given limit of the pipe. When the pipe is full, it will block further producing events to the pipe. And nil values are not allowed to be produced to a pipe. If the event is successfully produced, the method will return `()`. Otherwise, it will return `pipe:Error`.
 
 When the pipe is blocked, there is a waiting period to keep the event in the buffer. The waiting period has to be manually set using the `timeout` parameter and it is in `SECONDS`. After the timeout, the pipe will return a `pipe:Error` stating that the operation has timed out.
 
 ```ballerina
-pipe:Error? produce = pipe.produce(event, timeout = 5);
+import nuvindu/pipe;
+
+public function main() returns error? {
+    pipe:Pipe pipe = new('limit = 10);
+    check pipe.produce("event", timeout = 5);
+}
 ```
 
-Producing data to a closed pipe is not allowed. It will return a `pipe:Error`.
+Producing events to a closed pipe is not allowed. It will return a `pipe:Error`.
 
-#### Consume Data
+#### Consume Events
 
 Events produced to the pipe can be consumed using this method. The type of the return value is inferred using the expected type from the function. If the return type cannot be cast into the expected type it will return a `TypeCast Error`.
 
-If there is no data available in the pipe, it will wait until the `timeout` elapses (which has to be manually set in `SECONDS`). After the `timeout`, the pipe will return a `pipe:Error` stating that the operation has timed out.
+If there is no event available in the pipe, it will wait until the `timeout` elapses (which has to be manually set in `SECONDS`). After the `timeout`, the pipe will return a `pipe:Error` stating that the operation has timed out.
 
 ```ballerina
-string|pipe:Error event = pipe.consume(timeout = 10);
+import ballerina/io;
+import nuvindu/pipe;
+
+public function main() returns error? {
+    pipe:Pipe pipe = new('limit = 10);
+    string event = "event";
+    check pipe.produce(event, timeout = 5);
+
+    string consumedEvent = check pipe.consume(timeout = 10);
+    io:println(consumedEvent);
+}
 ```
 
-#### Consume Data as a Stream
+#### Consume Events via a Stream
 
 Using the following method, events in the pipe can be consumed via a stream. The stream type is inferred using the expected type from the function. If the return type cannot be cast into the expected type it will return a `TypeCast Error`.
 
 The `consume` method is used here as an underlying method. Therefore a `timeout` needs to be set to
-specify the maximum waiting period to consume data.
+specify the maximum waiting period to consume events.
 
 ```ballerina
-stream<string, error?> eventStream = pipe.consumeStream(timeout = 5.12323);
+import ballerina/io;
+import nuvindu/pipe;
 
-record {|string value;|}|error? nextEvent = dataStream.next();
-```
+public function main() returns error? {
+    pipe:Pipe pipe = new('limit = 10);
+    string event = "event";
+    check pipe.produce(event, timeout = 5);
 
-If the 'nextEvent' is neither `error` nor `null`, the event produced to the pipe can be received as a `record`.
-
-```ballerina
-string event = nextEvent.value
+    stream<string, error?> eventStream = pipe.consumeStream(timeout = 5.12323);
+    record {|string value;|}? nextEvent = check eventStream.next();
+    if nextEvent != () {
+        string consumedEvent = nextEvent.value;
+        io:println(consumedEvent);
+    }
+}
 ```
 
 ### Closing Pipes
 
-Closing a pipe can be complicated because there can be running APIs when the closing process starts. Therefore, when the closing method is invoked, the pipe is designed to allow no data to be produced.
-
-Any pipe can be checked whether it is closed using this method. Closing of a closed pipe will return a `pipe:Error`.
-
-```ballerina
-boolean isClosed = pipe.isClosed();
-```
-
-Even if the pipe is closed, both `consume` methods can be invoked.
+Closing a pipe can be complicated because there can be running APIs when the closing process starts. Therefore, when the closing method is invoked, the pipe is designed to allow no event to be produced. Closing of a closed pipe will return a `pipe:Error`. Even if the pipe is closed, both `consume` methods can be invoked.
 
 #### Graceful Close
 
-In the `gracefulClose` method, the remaining data in the pipe can be consumed for a specific period. The default timeout period is 30 seconds. But it can be manually set to a user's preferred time.
+In the `gracefulClose` method, the remaining events in the pipe can be consumed for a specific period. The default timeout period is 30 seconds. But it can be manually set to a user's preferred time.
 
-After that period, all the data is removed and the pipe instance is taken by the garbage collector. This graceful approach can reduce the damage that happened to the normal behavior of the pipe by suddenly closing it. If the pipe is successfully closed it will return `()`. Otherwise, it will return `pipe:Error`.
+After that period, all the events are removed and the pipe instance is taken by the garbage collector. This graceful approach can reduce the damage that happened to the normal behavior of the pipe by suddenly closing it. If the pipe is successfully closed it will return `()`. Otherwise, it will return `pipe:Error`.
 
 ```ballerina
-Error? gracefulClose = pipe.gracefulClose(timeout = 30);
+import ballerina/io;
+import ballerina/lang.runtime;
+import nuvindu/pipe;
+
+public function main() returns error? {
+    pipe:Pipe pipe = new(5);
+    check pipe.produce("event", timeout = 5.00111);
+    worker A {
+        runtime:sleep(5);
+        int|pipe:Error consumedEvent = pipe.consume(timeout = 5);
+        io:println(consumedEvent);
+    }
+    @strand {
+        thread: "any"
+    }
+    worker B {
+        pipe:Error? close = pipe.gracefulClose(timeout = 10);
+        pipe:Error? produce = pipe.produce("event", timeout = 5.00111); // This will produce an error
+        io:println(produce);
+    }
+}
 ```
 
 #### Immediate Close
@@ -84,9 +128,31 @@ Error? gracefulClose = pipe.gracefulClose(timeout = 30);
 This method will immediately close the pipe neglecting the graceful approach. If the pipe is successfully closed it will return `()`. Otherwise, it will return `pipe:Error`. Unexpected errors may occur.
 
 ```ballerina
-Error? immediateClose = pipe.immediateClose();
+import nuvindu/pipe;
+
+public function main() returns error? {
+    pipe:Pipe pipe = new('limit = 10);
+    check pipe.immediateClose();
+
+    check pipe.produce("event", timeout = 5); // This will produce an error
+}
 ```
 
-### Errors
+#### Check the Closing Status of the Pipe
 
-Any error related to the `Pipe` module can be represented by `pipe:Error`.
+This method will return a boolean value indicating whether the pipe is closed or not. If the pipe is closed, it will return `true`. Otherwise, it will return `false`.
+
+```ballerina
+import ballerina/io;
+import nuvindu/pipe;
+
+public function main() returns error? {
+    pipe:Pipe pipe = new('limit = 10);
+    boolean isClosed = pipe.isClosed();
+    io:println(isClosed);
+
+    check pipe.immediateClose();
+    isClosed = pipe.isClosed();
+    io:println(isClosed);
+}
+```
