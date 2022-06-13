@@ -134,3 +134,55 @@ function testWaitingInGracefulClose() returns error? {
         test:assertTrue(close !is Error);
     }
 }
+
+@test:Config {
+    groups: ["pipe"]
+}
+function testWaitingInConsume() returns error? {
+    Pipe pipe = new(1);
+    int expectedValue = 3;
+    worker A {
+        runtime:sleep(5);
+        Error? produce = pipe.produce(expectedValue, 30);
+        test:assertTrue(produce !is Error);
+    }
+
+    @strand {
+        thread: "any"
+    }
+    worker B {
+        int|Error actualValue = pipe.consume(30);
+        test:assertTrue(actualValue !is Error);
+        test:assertEquals(actualValue, expectedValue);
+    }
+}
+
+@test:Config {
+    groups: ["pipe"]
+}
+function testWaitingInProduce() returns error? {
+    Pipe pipe = new(1);
+    int expectedValue = 10;
+    int expectedNextValue = 11;
+    worker A {
+        Error? produce = pipe.produce(expectedValue, 30);
+        test:assertTrue(produce !is Error);
+
+        produce = pipe.produce(expectedNextValue, 30);
+        test:assertTrue(produce !is Error);
+
+        int|Error actualValue = pipe.consume(30);
+        test:assertTrue(actualValue !is Error);
+        test:assertEquals(actualValue, expectedNextValue);
+    }
+
+    @strand {
+        thread: "any"
+    }
+    worker B {
+        runtime:sleep(5);
+        int|Error actualValue = pipe.consume(30);
+        test:assertTrue(actualValue !is Error);
+        test:assertEquals(actualValue, expectedValue);
+    }
+}
