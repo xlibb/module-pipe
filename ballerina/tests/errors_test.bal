@@ -54,7 +54,7 @@ function testTimeoutErrorsInConsume() returns error? {
 }
 
 @test:Config {
-    groups: ["errors"]
+    groups: ["errors", "close"]
 }
 function testImmediateClosingOfClosedPipe() returns error? {
     Pipe pipe = new (1);
@@ -67,7 +67,7 @@ function testImmediateClosingOfClosedPipe() returns error? {
 }
 
 @test:Config {
-    groups: ["errors"]
+    groups: ["errors","close"]
 }
 function testGracefulClosingOfClosedPipe() returns error? {
     Pipe pipe = new (1);
@@ -80,7 +80,7 @@ function testGracefulClosingOfClosedPipe() returns error? {
 }
 
 @test:Config {
-    groups: ["errors"]
+    groups: ["errors", "close"]
 }
 function testClosingOfClosedStreamInPipe() returns error? {
     Pipe pipe = new (1);

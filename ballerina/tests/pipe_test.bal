@@ -18,7 +18,7 @@ import ballerina/test;
 import ballerina/lang.runtime;
 
 @test:Config {
-    groups: ["pipe"]
+    groups: ["main_apis"]
 }
 function testPipe() returns error? {
     Pipe pipe = new(5);
@@ -29,7 +29,7 @@ function testPipe() returns error? {
 }
 
 @test:Config {
-    groups: ["pipe"]
+    groups: ["records"]
 }
 function testPipeWithRecords() returns error? {
     Pipe pipe = new(5);
@@ -43,7 +43,7 @@ function testPipeWithRecords() returns error? {
 }
 
 @test:Config {
-    groups: ["pipe"]
+    groups: ["main_apis"]
 }
 function testPipeStream() returns error? {
     Pipe pipe = new(5);
@@ -68,7 +68,7 @@ function testPipeStream() returns error? {
 }
 
 @test:Config {
-    groups: ["pipe"]
+    groups: ["close", "main_apis"]
 }
 function testImmediateClose() returns error? {
     Pipe pipe = new(5);
@@ -81,7 +81,7 @@ function testImmediateClose() returns error? {
 }
 
 @test:Config {
-    groups: ["pipe"]
+    groups: ["close", "main_apis"]
 }
 function testGracefulClose() returns error? {
     Pipe pipe = new(5);
@@ -94,7 +94,7 @@ function testGracefulClose() returns error? {
 }
 
 @test:Config {
-    groups: ["pipe"]
+    groups: ["close", "main_apis"]
 }
 function testIsClosedInPipe() returns error? {
     Pipe pipe = new(5);
@@ -107,7 +107,7 @@ function testIsClosedInPipe() returns error? {
 }
 
 @test:Config {
-    groups: ["pipe"]
+    groups: ["close"]
 }
 function testWaitingInGracefulClose() returns error? {
     Pipe pipe = new(5);
@@ -136,7 +136,7 @@ function testWaitingInGracefulClose() returns error? {
 }
 
 @test:Config {
-    groups: ["pipe"]
+    groups: ["main_apis"]
 }
 function testWaitingInConsume() returns error? {
     Pipe pipe = new(1);
@@ -158,7 +158,7 @@ function testWaitingInConsume() returns error? {
 }
 
 @test:Config {
-    groups: ["pipe"]
+    groups: ["main_apis"]
 }
 function testWaitingInProduce() returns error? {
     Pipe pipe = new(1);
