@@ -1,7 +1,24 @@
+// Copyright (c) 2022, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+//
+// WSO2 Inc. licenses this file to you under the Apache License,
+// Version 2.0 (the "License"); you may not use this file except
+// in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing,
+// software distributed under the License is distributed on an
+// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+// KIND, either express or implied.  See the License for the
+// specific language governing permissions and limitations
+// under the License.
+
 import ballerina/test;
+import ballerina/lang.runtime;
 
 @test:Config {
-    groups: ["pipe"]
+    groups: ["main_apis"]
 }
 function testPipe() returns error? {
     Pipe pipe = new(5);
@@ -12,7 +29,7 @@ function testPipe() returns error? {
 }
 
 @test:Config {
-    groups: ["pipe"]
+    groups: ["records"]
 }
 function testPipeWithRecords() returns error? {
     Pipe pipe = new(5);
@@ -26,7 +43,7 @@ function testPipeWithRecords() returns error? {
 }
 
 @test:Config {
-    groups: ["pipe"]
+    groups: ["main_apis"]
 }
 function testPipeStream() returns error? {
     Pipe pipe = new(5);
@@ -51,7 +68,7 @@ function testPipeStream() returns error? {
 }
 
 @test:Config {
-    groups: ["pipe"]
+    groups: ["close", "main_apis"]
 }
 function testImmediateClose() returns error? {
     Pipe pipe = new(5);
@@ -64,7 +81,7 @@ function testImmediateClose() returns error? {
 }
 
 @test:Config {
-    groups: ["pipe"]
+    groups: ["close", "main_apis"]
 }
 function testGracefulClose() returns error? {
     Pipe pipe = new(5);
@@ -77,7 +94,7 @@ function testGracefulClose() returns error? {
 }
 
 @test:Config {
-    groups: ["pipe"]
+    groups: ["close", "main_apis"]
 }
 function testIsClosedInPipe() returns error? {
     Pipe pipe = new(5);
@@ -87,4 +104,85 @@ function testIsClosedInPipe() returns error? {
     Pipe newPipe = new(5);
     check newPipe.immediateClose();
     test:assertTrue(pipe.isClosed());
+}
+
+@test:Config {
+    groups: ["close"]
+}
+function testWaitingInGracefulClose() returns error? {
+    Pipe pipe = new(5);
+    int expectedValue = 1;
+    check pipe.produce(expectedValue, timeout = 5.00111);
+    worker A {
+        runtime:sleep(5);
+        int|Error actualValue = pipe.consume(timeout = 5);
+        int|Error actualError = pipe.consume(timeout = 5);
+
+        test:assertTrue(actualValue !is Error);
+        test:assertEquals(actualValue, expectedValue);
+
+        string expectedErrorMessage = "Operation has timed out.";
+        test:assertTrue(actualError is Error);
+        string actualErrorMessage = (<error>actualError).message();
+        test:assertEquals(actualErrorMessage, expectedErrorMessage);
+    }
+    @strand {
+        thread: "any"
+    }
+    worker B {
+        Error? close = pipe.gracefulClose();
+        test:assertTrue(close !is Error);
+    }
+}
+
+@test:Config {
+    groups: ["main_apis"]
+}
+function testWaitingInConsume() returns error? {
+    Pipe pipe = new(1);
+    int expectedValue = 3;
+    worker A {
+        runtime:sleep(5);
+        Error? produce = pipe.produce(expectedValue, 30);
+        test:assertTrue(produce !is Error);
+    }
+
+    @strand {
+        thread: "any"
+    }
+    worker B {
+        int|Error actualValue = pipe.consume(30);
+        test:assertTrue(actualValue !is Error);
+        test:assertEquals(actualValue, expectedValue);
+    }
+}
+
+@test:Config {
+    groups: ["main_apis"]
+}
+function testWaitingInProduce() returns error? {
+    Pipe pipe = new(1);
+    int expectedValue = 10;
+    int expectedNextValue = 11;
+    worker A {
+        Error? produce = pipe.produce(expectedValue, 30);
+        test:assertTrue(produce !is Error);
+
+        produce = pipe.produce(expectedNextValue, 30);
+        test:assertTrue(produce !is Error);
+
+        int|Error actualValue = pipe.consume(30);
+        test:assertTrue(actualValue !is Error);
+        test:assertEquals(actualValue, expectedNextValue);
+    }
+
+    @strand {
+        thread: "any"
+    }
+    worker B {
+        runtime:sleep(5);
+        int|Error actualValue = pipe.consume(30);
+        test:assertTrue(actualValue !is Error);
+        test:assertEquals(actualValue, expectedValue);
+    }
 }
