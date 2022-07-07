@@ -41,7 +41,7 @@ modules = [
 [[package]]
 org = "nuvindu"
 name = "pipe"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
 	{org = "ballerina", name = "jballerina.java"},
 	{org = "ballerina", name = "lang.runtime"},
