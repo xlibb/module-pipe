@@ -16,6 +16,7 @@
 
 package org.nuvindu.pipe;
 
+import io.ballerina.runtime.api.Environment;
 import io.ballerina.runtime.api.values.BDecimal;
 import io.ballerina.runtime.api.values.BError;
 import io.ballerina.runtime.api.values.BObject;
@@ -29,11 +30,11 @@ import static org.nuvindu.pipe.utils.Utils.createError;
  */
 public class ResultIterator {
 
-    public static Object nextValue(BObject streamGenerator) {
+    public static Object nextValue(Environment env, BObject streamGenerator) {
         Pipe pipe = (Pipe) streamGenerator.getNativeData(NATIVE_PIPE);
         if (pipe != null) {
             BDecimal timeOut = (BDecimal) streamGenerator.getNativeData(TIME_OUT);
-            return pipe.consumeData(timeOut);
+            return pipe.asyncConsume(env, timeOut);
         }
         return createError("Events cannot be consumed after the stream is closed");
     }

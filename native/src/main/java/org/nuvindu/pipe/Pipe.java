@@ -16,7 +16,10 @@
 
 package org.nuvindu.pipe;
 
+import io.ballerina.runtime.api.Environment;
+import io.ballerina.runtime.api.Future;
 import io.ballerina.runtime.api.PredefinedTypes;
+import io.ballerina.runtime.api.async.Callback;
 import io.ballerina.runtime.api.creators.TypeCreator;
 import io.ballerina.runtime.api.creators.ValueCreator;
 import io.ballerina.runtime.api.types.UnionType;
@@ -26,13 +29,18 @@ import io.ballerina.runtime.api.values.BHandle;
 import io.ballerina.runtime.api.values.BObject;
 import io.ballerina.runtime.api.values.BStream;
 import io.ballerina.runtime.api.values.BTypedesc;
+import org.nuvindu.pipe.observer.ClosureCallback;
+import org.nuvindu.pipe.observer.ConsumerCallback;
+import org.nuvindu.pipe.observer.Notifier;
+import org.nuvindu.pipe.observer.Observable;
+import org.nuvindu.pipe.observer.Observer;
+import org.nuvindu.pipe.observer.ProducerCallback;
+import org.nuvindu.pipe.observer.Timeout;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.TimerTask;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.nuvindu.pipe.utils.ModuleUtils.getModule;
 import static org.nuvindu.pipe.utils.Utils.JAVA_PIPE_OBJECT;
@@ -46,97 +54,111 @@ import static org.nuvindu.pipe.utils.Utils.createError;
  * Provide APIs to exchange events concurrently.
  */
 public class Pipe implements IPipe {
-    final Lock lock = new ReentrantLock(true);
-    final Condition notFull  = lock.newCondition();
-    final Condition notEmpty = lock.newCondition();
-    final Condition close = lock.newCondition();
-
-    private List<Object> queue = new LinkedList<>();
+    private ConcurrentLinkedQueue<Object> queue;
+    private final AtomicInteger queueSize;
     private final Long limit;
-    private boolean isClosed = false;
+    private final AtomicBoolean isClosed;
+    private final Observable producer;
+    private final Observable consumer;
+    private final Observable closure;
+    private final Timeout timer;
+
     public Pipe(Long limit) {
         this.limit = limit;
+        this.queue = new ConcurrentLinkedQueue<>();
+        this.queueSize = new AtomicInteger(0);
+        this.isClosed = new AtomicBoolean(false);
+        this.consumer = new Observable();
+        this.producer = new Observable();
+        this.closure = new Observable();
+        this.timer = new Timeout();
     }
 
-    protected BError produceData(Object events, BDecimal timeout) {
+    public BError asyncProduce(Environment env, Object events, BDecimal timeout) {
         if (events == null) {
             return createError("Nil values cannot be produced to a pipe.");
-        } else if (this.isClosed) {
+        } else if (this.isClosed.get()) {
             return createError("Events cannot be produced to a closed pipe.");
         }
-        lock.lock();
-        try {
-            while (this.queue.size() == this.limit) {
-                if (!notFull.await((long) timeout.floatValue(), TimeUnit.SECONDS)) {
-                    return createError("Operation has timed out.");
-                }
-            }
+        if (this.queueSize.get() == this.limit) {
+            Future future = env.markAsync();
+            Observer observer = new Observer(null);
+            Callback callback = new ProducerCallback(future, this.producer, queueSize, queue, events, this.timer,
+                                                     observer);
+            observer.addCallback(callback);
+            this.timer.registerObserver(observer);
+            this.consumer.registerObserver(observer);
+            Notifier notifier = new Notifier(this.timer, observer);
+            this.timer.schedule(notifier, (long) timeout.floatValue() * 1000);
+        } else {
             this.queue.add(events);
-            notEmpty.signal();
-        } catch (InterruptedException e) {
-            return createError("Operation has been interrupted.");
-        } finally {
-            lock.unlock();
+            this.queueSize.incrementAndGet();
+            this.producer.notifyObservers(events);
         }
         return null;
     }
 
-    protected Object consumeData(BDecimal timeout) {
+    public Object asyncConsume(Environment env, BDecimal timeout) {
         if (this.queue == null) {
             return createError("No any event is available in the closed pipe.");
         }
-        lock.lock();
-        try {
-            while (this.queue.size() == 0) {
-                if (this.isClosed) {
-                    close.signal();
-                }
-                if (!notEmpty.await((long) timeout.floatValue(), TimeUnit.SECONDS)) {
-                    return createError("Operation has timed out.");
-                }
-            }
-            notFull.signal();
-            return this.queue.remove(0);
-        } catch (InterruptedException e) {
-            return createError("Operation has been interrupted.");
-        } finally {
-            lock.unlock();
+        if (this.queueSize.get() == 0) {
+            this.closure.notifyObservers(null);
+            Future future = env.markAsync();
+            Observer observer = new Observer(null);
+            Callback callback = new ConsumerCallback(future, this.consumer, queueSize, queue, this.timer,
+                                                     observer);
+            observer.addCallback(callback);
+            this.producer.registerObserver(observer);
+            this.timer.registerObserver(observer);
+
+            Notifier notifier = new Notifier(this.timer, observer);
+            this.timer.schedule(notifier, (long) timeout.floatValue() * 1000);
+        } else {
+            Object consumeObject = this.queue.remove();
+            this.queueSize.decrementAndGet();
+            this.consumer.notifyObservers(consumeObject);
+            return consumeObject;
         }
+        return null;
     }
 
     @Override
     public boolean isClosed() {
-        return this.isClosed;
+        return this.isClosed.get();
     }
 
     @Override
     public BError immediateClose() {
-        if (this.isClosed) {
+        if (this.isClosed.get()) {
             return createError("Closing of a closed pipe is not allowed.");
         }
-        this.isClosed = true;
+        this.isClosed.compareAndSet(false, true);
+        this.timer.cancel();
         this.queue = null;
         return null;
     }
 
     @Override
     public BError gracefulClose(BDecimal timeout) {
-        if (this.isClosed) {
+        if (this.isClosed.get()) {
             return createError("Closing of a closed pipe is not allowed.");
         }
-        this.isClosed = true;
-        lock.lock();
-        try {
-            while (this.queue.size() != 0) {
-                if (!close.await((long) timeout.floatValue(), TimeUnit.SECONDS)) {
-                    break;
+        this.isClosed.compareAndSet(false, true);
+        if (this.queueSize.get() != 0) {
+            Observer observer = new Observer(null);
+            Callback callback = new ClosureCallback(this.queue);
+            this.timer.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    queue = null;
                 }
-            }
-        } catch (InterruptedException e) {
-            return createError("Operation has been interrupted.");
-        } finally {
+            }, (long) timeout.floatValue() * 1000);
+            observer.addCallback(callback);
+            this.closure.registerObserver(observer);
+        } else {
+            this.timer.cancel();
             this.queue = null;
-            lock.unlock();
         }
         return null;
     }
@@ -152,15 +174,15 @@ public class Pipe implements IPipe {
                                               streamGenerator);
     }
 
-    public static Object consume(BObject pipe, BDecimal timeout, BTypedesc typeParam) {
+    public static Object consume(Environment env, BObject pipe, BDecimal timeout, BTypedesc typeParam) {
         BHandle handle = (BHandle) pipe.get(JAVA_PIPE_OBJECT);
         Pipe javaPipe = (Pipe) handle.getValue();
-        return javaPipe.consumeData(timeout);
+        return javaPipe.asyncConsume(env, timeout);
     }
 
-    public static BError produce(BObject pipe, Object events, BDecimal timeout) {
+    public static BError produce(Environment env, BObject pipe, Object events, BDecimal timeout) {
         BHandle handle = (BHandle) pipe.get(JAVA_PIPE_OBJECT);
         Pipe javaPipe = (Pipe) handle.getValue();
-        return javaPipe.produceData(events, timeout);
+        return javaPipe.asyncProduce(env, events, timeout);
     }
 }
