@@ -67,7 +67,7 @@ function testImmediateClosingOfClosedPipe() returns error? {
 }
 
 @test:Config {
-    groups: ["errors","close"]
+    groups: ["errors", "close"]
 }
 function testGracefulClosingOfClosedPipe() returns error? {
     Pipe pipe = new (1);

@@ -25,7 +25,7 @@ function testPipe() returns error? {
     check pipe.produce("pipe_test", timeout = 2);
     string actualValue = check pipe.consume(5);
     string expectedValue = "pipe_test";
-    test:assertEquals(expectedValue, actualValue);
+    test:assertEquals(actualValue, expectedValue);
 }
 
 @test:Config {
@@ -184,5 +184,50 @@ function testWaitingInProduce() returns error? {
         int|Error actualValue = pipe.consume(30);
         test:assertTrue(actualValue !is Error);
         test:assertEquals(actualValue, expectedValue);
+    }
+}
+
+
+@test:Config {
+    groups: ["main_apis", "qww"]
+}
+function testConcurrencyInPipe() returns error? {
+    Pipe pipe = new(1);
+    int expectedValue = 3;
+    int workerCount = 0;
+    worker A {
+        runtime:sleep(1);
+        Error? produce = pipe.produce(expectedValue, 5);
+        test:assertTrue(produce !is Error);
+        workerCount+=1;
+    }
+
+    @strand {
+        thread: "any"
+    }
+    worker B {
+        int|Error actualValue = pipe.consume(6);
+        test:assertTrue(actualValue !is Error);
+        test:assertEquals(actualValue, expectedValue);
+        workerCount+=1;
+    }
+
+    worker C {
+        runtime:sleep(1);
+        int|Error actualValue = pipe.consume(2);
+        test:assertTrue(actualValue is Error);
+        workerCount+=1;
+    }
+
+    worker D {
+        runtime:sleep(1);
+        int|Error actualValue = pipe.consume(2);
+        test:assertTrue(actualValue is Error);
+        workerCount+=1;
+    }
+
+    worker E {
+        runtime:sleep(8);
+        test:assertEquals(workerCount, 4);
     }
 }
