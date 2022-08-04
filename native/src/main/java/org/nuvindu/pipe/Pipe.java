@@ -132,28 +132,27 @@ public class Pipe implements IPipe {
         return null;
     }
 
-    @Override
-    public BError gracefulClose(BDecimal timeout) {
+    protected void asyncClose(Callback callback, BDecimal timeout) {
         if (this.isClosed.get()) {
-            return createError("Closing of a closed pipe is not allowed.");
-        }
-        this.isClosed.compareAndSet(false, true);
-        if (this.queueSize.get() != 0) {
-            Observer observer = new Observer(null);
-            Callback callback = new ClosureCallback(this.queue);
-            this.timer.schedule(new TimerTask() {
-                @Override
-                public void run() {
-                    queue = null;
-                }
-            }, (long) timeout.floatValue() * 1000);
-            observer.addCallback(callback);
-            this.closure.registerObserver(observer);
+            callback.onError(createError("Closing of a closed pipe is not allowed."));
         } else {
-            this.timer.cancel();
-            this.queue = null;
+            this.isClosed.compareAndSet(false, true);
+            if (this.queueSize.get() != 0) {
+                emptyQueue.registerObserver(callback);
+                this.timer.schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+                        queue = null;
+                        emptyQueue.unregisterObserver(callback);
+                        callback.onSuccess(null);
+                        this.cancel();
+                    }
+                }, (long) timeout.floatValue() * 1000);
+            } else {
+                this.queue = null;
+                callback.onSuccess(null);
+            }
         }
-        return null;
     }
 
     public static BStream consumeStream(BObject pipe, BDecimal timeout, BTypedesc typeParam) {
@@ -187,9 +186,14 @@ public class Pipe implements IPipe {
         return null;
     }
 
-        BHandle handle = (BHandle) pipe.get(JAVA_PIPE_OBJECT);
-        Pipe javaPipe = (Pipe) handle.getValue();
-        return javaPipe.asyncConsume(env, timeout);
+    public static BError gracefulClose(Environment env, BObject pipe, BDecimal timeout) {
+        BHandle handle = (BHandle) pipe.get(NATIVE_PIPE_OBJECT);
+        Pipe nativePipe = (Pipe) handle.getValue();
+        Future future = env.markAsync();
+        Callback observer = new Callback(future, null, null, null);
+        nativePipe.asyncClose(observer, timeout);
+        return null;
+    }
 
     protected Observable getProducer() {
         return producer;

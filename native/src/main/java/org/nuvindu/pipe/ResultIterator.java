@@ -44,18 +44,17 @@ public class ResultIterator {
         return createError("Events cannot be consumed after the stream is closed");
     }
 
-    public static BError close(BObject streamGenerator) {
+    public static BError close(Environment env, BObject streamGenerator) {
         BDecimal timeOut = (BDecimal) streamGenerator.getNativeData(TIME_OUT);
         Pipe pipe = ((Pipe) streamGenerator.getNativeData(NATIVE_PIPE));
         if (pipe == null) {
-            return createError("Failed to close the stream.", 
-                               createError("Closing of a closed pipe is not allowed."));
+            BError cause = createError("Closing of a closed pipe is not allowed.");
+            return createError("Failed to close the stream.", cause);
         }
-        BError gracefulClose = pipe.gracefulClose(timeOut);
-        if (gracefulClose == null) {
-            streamGenerator.addNativeData(NATIVE_PIPE, null);
-            return null;
-        }
-        return createError("Failed to close the stream.", gracefulClose);
+        Future future = env.markAsync();
+        Callback observer = new Callback(future, null, null, null);
+        pipe.asyncClose(observer, timeOut);
+        streamGenerator.addNativeData(NATIVE_PIPE, null);
+        return null;
     }
 }
