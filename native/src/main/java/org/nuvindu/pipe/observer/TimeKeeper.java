@@ -8,15 +8,15 @@ import java.util.Timer;
 /**
  * Timer class implementation for Pipe package.
  */
-public class Timeout extends Timer implements IObservable {
-    ArrayList<Observer> observerList;
+public class TimeKeeper extends Timer implements IObservable {
+    ArrayList<Callback> callbackList;
 
     /**
      * Creates a new timer.  The associated thread does <i>not</i>
      * {@linkplain Thread#setDaemon run as a daemon}.
      */
-    public Timeout() {
-        this.observerList = new ArrayList<>();
+    public TimeKeeper() {
+        this.callbackList = new ArrayList<>();
     }
 
     /**
@@ -29,19 +29,19 @@ public class Timeout extends Timer implements IObservable {
      * @throws NullPointerException if {@code name} is null
      * @since 1.5
      */
-    public Timeout(String name, boolean isDaemon, ArrayList<Observer> observerList) {
+    public TimeKeeper(String name, boolean isDaemon, ArrayList<Callback> callbackList) {
         super(name, isDaemon);
-        this.observerList = new ArrayList<>();
+        this.callbackList = new ArrayList<>();
     }
 
     @Override
-    public void registerObserver(Observer o) {
-        observerList.add(o);
+    public void registerObserver(Callback o) {
+        callbackList.add(o);
     }
 
     @Override
-    public void unregisterObserver(Observer o) {
-        observerList.remove(o);
+    public void unregisterObserver(Callback o) {
+        callbackList.remove(o);
     }
 
     @Override
@@ -49,8 +49,22 @@ public class Timeout extends Timer implements IObservable {
         //
     }
 
-    public void notifyObservers(BError bError, Observer observer) {
-        observer.update(bError);
-        unregisterObserver(observer);
+    @Override
+    public void notifyObservers() {
+        //
+    }
+
+    @Override
+    public void notifyObservers(BError bError) {
+        //
+    }
+
+    public void notifyObservers(BError bError, Callback callback) {
+        callback.onTimeout(bError);
+    }
+
+    @Override
+    public void notifyObservers(boolean isEmpty) {
+        //
     }
 }

@@ -19,7 +19,6 @@ package org.nuvindu.pipe;
 import io.ballerina.runtime.api.Environment;
 import io.ballerina.runtime.api.Future;
 import io.ballerina.runtime.api.PredefinedTypes;
-import io.ballerina.runtime.api.async.Callback;
 import io.ballerina.runtime.api.creators.TypeCreator;
 import io.ballerina.runtime.api.creators.ValueCreator;
 import io.ballerina.runtime.api.types.UnionType;
@@ -29,13 +28,10 @@ import io.ballerina.runtime.api.values.BHandle;
 import io.ballerina.runtime.api.values.BObject;
 import io.ballerina.runtime.api.values.BStream;
 import io.ballerina.runtime.api.values.BTypedesc;
-import org.nuvindu.pipe.observer.ClosureCallback;
-import org.nuvindu.pipe.observer.ConsumerCallback;
+import org.nuvindu.pipe.observer.Callback;
 import org.nuvindu.pipe.observer.Notifier;
 import org.nuvindu.pipe.observer.Observable;
-import org.nuvindu.pipe.observer.Observer;
-import org.nuvindu.pipe.observer.ProducerCallback;
-import org.nuvindu.pipe.observer.Timeout;
+import org.nuvindu.pipe.observer.TimeKeeper;
 
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -43,8 +39,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.nuvindu.pipe.utils.ModuleUtils.getModule;
-import static org.nuvindu.pipe.utils.Utils.JAVA_PIPE_OBJECT;
 import static org.nuvindu.pipe.utils.Utils.NATIVE_PIPE;
+import static org.nuvindu.pipe.utils.Utils.NATIVE_PIPE_OBJECT;
 import static org.nuvindu.pipe.utils.Utils.RESULT_ITERATOR;
 import static org.nuvindu.pipe.utils.Utils.STREAM_GENERATOR;
 import static org.nuvindu.pipe.utils.Utils.TIME_OUT;
@@ -60,67 +56,64 @@ public class Pipe implements IPipe {
     private final AtomicBoolean isClosed;
     private final Observable producer;
     private final Observable consumer;
-    private final Observable closure;
-    private final Timeout timer;
+    private final Observable emptyQueue;
+    private final TimeKeeper timer;
 
     public Pipe(Long limit) {
         this.limit = limit;
         this.queue = new ConcurrentLinkedQueue<>();
         this.queueSize = new AtomicInteger(0);
         this.isClosed = new AtomicBoolean(false);
-        this.consumer = new Observable();
-        this.producer = new Observable();
-        this.closure = new Observable();
-        this.timer = new Timeout();
+        this.consumer = new Observable(this.queue, this.queueSize);
+        this.producer = new Observable(this.queue, this.queueSize);
+        this.emptyQueue = new Observable(null, null);
+        this.timer = new TimeKeeper();
     }
 
-    public BError asyncProduce(Environment env, Object events, BDecimal timeout) {
+    public Pipe(Long limit, TimeKeeper timeKeeper) {
+        this.limit = limit;
+        this.queue = new ConcurrentLinkedQueue<>();
+        this.queueSize = new AtomicInteger(0);
+        this.isClosed = new AtomicBoolean(false);
+        this.consumer = new Observable(this.queue, this.queueSize);
+        this.producer = new Observable(this.queue, this.queueSize);
+        this.emptyQueue = new Observable(null, null);
+        this.timer = timeKeeper;
+    }
+
+    protected void asyncProduce(Callback callback, Object events, BDecimal timeout) {
         if (events == null) {
-            return createError("Nil values cannot be produced to a pipe.");
+            callback.onError(createError("Nil values cannot be produced to a pipe."));
         } else if (this.isClosed.get()) {
-            return createError("Events cannot be produced to a closed pipe.");
-        }
-        if (this.queueSize.get() == this.limit) {
-            Future future = env.markAsync();
-            Observer observer = new Observer(null);
-            Callback callback = new ProducerCallback(future, this.producer, queueSize, queue, events, this.timer,
-                                                     observer);
-            observer.addCallback(callback);
-            this.timer.registerObserver(observer);
-            this.consumer.registerObserver(observer);
-            Notifier notifier = new Notifier(this.timer, observer);
+            callback.onError(createError("Events cannot be produced to a closed pipe."));
+        } else if (this.queueSize.get() == this.limit) {
+            callback.setEvents(events);
+            this.timer.registerObserver(callback);
+            this.consumer.registerObserver(callback);
+            Notifier notifier = new Notifier(this.timer, callback);
             this.timer.schedule(notifier, (long) timeout.floatValue() * 1000);
         } else {
-            this.queue.add(events);
-            this.queueSize.incrementAndGet();
+            queue.add(events);
+            queueSize.incrementAndGet();
             this.producer.notifyObservers(events);
+            callback.onSuccess(null);
         }
-        return null;
     }
 
-    public Object asyncConsume(Environment env, BDecimal timeout) {
+    protected void asyncConsume(Callback callback, BDecimal timeout) {
         if (this.queue == null) {
-            return createError("No any event is available in the closed pipe.");
-        }
-        if (this.queueSize.get() == 0) {
-            this.closure.notifyObservers(null);
-            Future future = env.markAsync();
-            Observer observer = new Observer(null);
-            Callback callback = new ConsumerCallback(future, this.consumer, queueSize, queue, this.timer,
-                                                     observer);
-            observer.addCallback(callback);
-            this.producer.registerObserver(observer);
-            this.timer.registerObserver(observer);
-
-            Notifier notifier = new Notifier(this.timer, observer);
+            callback.onError(createError("No any event is available in the closed pipe."));
+        } else if (this.queueSize.get() == 0) {
+            this.emptyQueue.notifyObservers(true);
+            this.producer.registerObserver(callback);
+            this.timer.registerObserver(callback);
+            Notifier notifier = new Notifier(this.timer, callback);
             this.timer.schedule(notifier, (long) timeout.floatValue() * 1000);
         } else {
-            Object consumeObject = this.queue.remove();
-            this.queueSize.decrementAndGet();
-            this.consumer.notifyObservers(consumeObject);
-            return consumeObject;
+            queueSize.decrementAndGet();
+            callback.onSuccess(queue.remove());
+            this.consumer.notifyObservers();
         }
-        return null;
     }
 
     @Override
@@ -167,22 +160,46 @@ public class Pipe implements IPipe {
         UnionType typeUnion = TypeCreator.createUnionType(PredefinedTypes.TYPE_NULL, PredefinedTypes.TYPE_ERROR);
         BObject resultIterator = ValueCreator.createObjectValue(getModule(), RESULT_ITERATOR);
         BObject streamGenerator = ValueCreator.createObjectValue(getModule(), STREAM_GENERATOR, resultIterator);
-        BHandle handle = (BHandle) pipe.get(JAVA_PIPE_OBJECT);
+        BHandle handle = (BHandle) pipe.get(NATIVE_PIPE_OBJECT);
         streamGenerator.addNativeData(NATIVE_PIPE, handle.getValue());
         streamGenerator.addNativeData(TIME_OUT, timeout);
         return ValueCreator.createStreamValue(TypeCreator.createStreamType(typeParam.getDescribingType(), typeUnion),
                                               streamGenerator);
     }
 
+    public static BError produce(Environment env, BObject pipe, Object events, BDecimal timeout) {
+        BHandle handle = (BHandle) pipe.get(NATIVE_PIPE_OBJECT);
+        Pipe nativePipe = (Pipe) handle.getValue();
+        Future future = env.markAsync();
+        Callback observer = new Callback(future, nativePipe.getConsumer(), nativePipe.getTimer(),
+                nativePipe.getProducer());
+        nativePipe.asyncProduce(observer, events, timeout);
+        return null;
+    }
+
     public static Object consume(Environment env, BObject pipe, BDecimal timeout, BTypedesc typeParam) {
+        BHandle handle = (BHandle) pipe.get(NATIVE_PIPE_OBJECT);
+        Pipe nativePipe = (Pipe) handle.getValue();
+        Future future = env.markAsync();
+        Callback observer = new Callback(future, nativePipe.getProducer(), nativePipe.getTimer(),
+                                         nativePipe.getConsumer());
+        nativePipe.asyncConsume(observer, timeout);
+        return null;
+    }
+
         BHandle handle = (BHandle) pipe.get(JAVA_PIPE_OBJECT);
         Pipe javaPipe = (Pipe) handle.getValue();
         return javaPipe.asyncConsume(env, timeout);
+
+    protected Observable getProducer() {
+        return producer;
     }
 
-    public static BError produce(Environment env, BObject pipe, Object events, BDecimal timeout) {
-        BHandle handle = (BHandle) pipe.get(JAVA_PIPE_OBJECT);
-        Pipe javaPipe = (Pipe) handle.getValue();
-        return javaPipe.asyncProduce(env, events, timeout);
+    protected Observable getConsumer() {
+        return consumer;
+    }
+
+    protected TimeKeeper getTimer() {
+        return timer;
     }
 }
