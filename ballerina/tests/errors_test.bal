@@ -15,6 +15,7 @@
 // under the License.
 
 import ballerina/test;
+import ballerina/time;
 
 @test:Config {
     groups: ["errors"]
@@ -72,11 +73,14 @@ function testImmediateClosingOfClosedPipe() returns error? {
 function testGracefulClosingOfClosedPipe() returns error? {
     Pipe pipe = new (1);
     string expectedValue = "Closing of a closed pipe is not allowed.";
+    time:Utc currentUtc = time:utcNow();
     check pipe.gracefulClose();
     Error? gracefulCloseResult = pipe.gracefulClose();
     test:assertTrue(gracefulCloseResult is Error);
     string actualValueValue = (<error>gracefulCloseResult).message();
     test:assertEquals(actualValueValue, expectedValue);
+    int val = time:utcNow()[0] - currentUtc[0];
+    test:assertTrue(val < 30);
 }
 
 @test:Config {

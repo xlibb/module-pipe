@@ -14,8 +14,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-import nuvindu/pipe;
 import ballerina/test;
+import nuvindu/pipe;
 
 @test:Config {
     groups: ["examples", "covid_report"]

@@ -14,8 +14,9 @@
 // specific language governing permissions and limitations
 // under the License.
 
-import ballerina/test;
+import ballerina/time;
 import ballerina/lang.runtime;
+import ballerina/test;
 
 @test:Config {
     groups: ["main_apis"]
@@ -86,7 +87,7 @@ function testImmediateClose() returns error? {
 function testGracefulClose() returns error? {
     Pipe pipe = new(5);
     check pipe.produce("1", timeout = 5);
-    check pipe.gracefulClose();
+    check pipe.gracefulClose(timeout = 5);
     string expectedValue = "Events cannot be produced to a closed pipe.";
     Error? actualValue = pipe.produce("1", timeout = 5);
     test:assertTrue(actualValue is Error);
@@ -99,11 +100,14 @@ function testGracefulClose() returns error? {
 function testIsClosedInPipe() returns error? {
     Pipe pipe = new(5);
     test:assertTrue(!pipe.isClosed());
+    time:Utc currentUtc = time:utcNow();
     check pipe.gracefulClose();
     test:assertTrue(pipe.isClosed());
     Pipe newPipe = new(5);
     check newPipe.immediateClose();
     test:assertTrue(pipe.isClosed());
+    int val = time:utcNow()[0] - currentUtc[0];
+    test:assertTrue(val < 30);
 }
 
 @test:Config {
@@ -112,6 +116,7 @@ function testIsClosedInPipe() returns error? {
 function testWaitingInGracefulClose() returns error? {
     Pipe pipe = new(5);
     int expectedValue = 1;
+    time:Utc currentUtc = time:utcNow();
     check pipe.produce(expectedValue, timeout = 5.00111);
     worker A {
         runtime:sleep(5);
@@ -132,6 +137,8 @@ function testWaitingInGracefulClose() returns error? {
     worker B {
         Error? close = pipe.gracefulClose();
         test:assertTrue(close !is Error);
+        int val = time:utcNow()[0] - currentUtc[0];
+        test:assertTrue(val < 30);
     }
 }
 
@@ -189,7 +196,7 @@ function testWaitingInProduce() returns error? {
 
 
 @test:Config {
-    groups: ["main_apis", "qww"]
+    groups: ["main_apis"]
 }
 function testConcurrencyInPipe() returns error? {
     Pipe pipe = new(1);
