@@ -12,13 +12,13 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class Callback implements IObserver {
     Future future;
-    TimeKeeper timeKeeper;
+    Observable timeKeeper;
     Object events;
     Observable observable;
     Observable notifyObservable;
     AtomicBoolean atomicUpdate;
 
-    public Callback(Future future, Observable observable, TimeKeeper timeKeeper, Observable notifyObservable) {
+    public Callback(Future future, Observable observable, Observable timeKeeper, Observable notifyObservable) {
         this.future = future;
         this.timeKeeper = timeKeeper;
         this.notifyObservable = notifyObservable;

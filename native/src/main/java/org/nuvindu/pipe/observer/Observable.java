@@ -53,7 +53,7 @@ public class Observable implements IObservable {
 
     @Override
     public void notifyObservers(BError bError, Callback callback) {
-        //
+        callback.onTimeout(bError);
     }
 
     @Override

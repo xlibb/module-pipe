@@ -31,7 +31,6 @@ import io.ballerina.runtime.api.values.BTypedesc;
 import org.nuvindu.pipe.observer.Callback;
 import org.nuvindu.pipe.observer.Notifier;
 import org.nuvindu.pipe.observer.Observable;
-import org.nuvindu.pipe.observer.TimeKeeper;
 
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -57,7 +56,7 @@ public class Pipe implements IPipe {
     private final Observable producer;
     private final Observable consumer;
     private final Observable emptyQueue;
-    private final TimeKeeper timer;
+    private final Observable timeKeeper;
 
     public Pipe(Long limit) {
         this.limit = limit;
@@ -67,7 +66,7 @@ public class Pipe implements IPipe {
         this.consumer = new Observable(this.queue, this.queueSize);
         this.producer = new Observable(this.queue, this.queueSize);
         this.emptyQueue = new Observable(null, null);
-        this.timer = new TimeKeeper();
+        this.timeKeeper = new Observable(null, null);
     }
 
     public Pipe(Long limit, TimeKeeper timeKeeper) {
@@ -78,7 +77,7 @@ public class Pipe implements IPipe {
         this.consumer = new Observable(this.queue, this.queueSize);
         this.producer = new Observable(this.queue, this.queueSize);
         this.emptyQueue = new Observable(null, null);
-        this.timer = timeKeeper;
+        this.timeKeeper = new Observable(null, null);
     }
 
     protected void asyncProduce(Callback callback, Object events, BDecimal timeout) {
@@ -88,9 +87,9 @@ public class Pipe implements IPipe {
             callback.onError(createError("Events cannot be produced to a closed pipe."));
         } else if (this.queueSize.get() == this.limit) {
             callback.setEvents(events);
-            this.timer.registerObserver(callback);
+            this.timeKeeper.registerObserver(callback);
             this.consumer.registerObserver(callback);
-            Notifier notifier = new Notifier(this.timer, callback);
+            Notifier notifier = new Notifier(this.timeKeeper, callback);
             this.timer.schedule(notifier, (long) timeout.floatValue() * 1000);
         } else {
             queue.add(events);
@@ -106,8 +105,8 @@ public class Pipe implements IPipe {
         } else if (this.queueSize.get() == 0) {
             this.emptyQueue.notifyObservers(true);
             this.producer.registerObserver(callback);
-            this.timer.registerObserver(callback);
-            Notifier notifier = new Notifier(this.timer, callback);
+            this.timeKeeper.registerObserver(callback);
+            Notifier notifier = new Notifier(this.timeKeeper, callback);
             this.timer.schedule(notifier, (long) timeout.floatValue() * 1000);
         } else {
             queueSize.decrementAndGet();
@@ -170,8 +169,8 @@ public class Pipe implements IPipe {
         BHandle handle = (BHandle) pipe.get(NATIVE_PIPE_OBJECT);
         Pipe nativePipe = (Pipe) handle.getValue();
         Future future = env.markAsync();
-        Callback observer = new Callback(future, nativePipe.getConsumer(), nativePipe.getTimer(),
-                nativePipe.getProducer());
+        Callback observer = new Callback(future, nativePipe.getConsumer(), nativePipe.getTimeKeeper(),
+                                         nativePipe.getProducer());
         nativePipe.asyncProduce(observer, events, timeout);
         return null;
     }
@@ -180,7 +179,7 @@ public class Pipe implements IPipe {
         BHandle handle = (BHandle) pipe.get(NATIVE_PIPE_OBJECT);
         Pipe nativePipe = (Pipe) handle.getValue();
         Future future = env.markAsync();
-        Callback observer = new Callback(future, nativePipe.getProducer(), nativePipe.getTimer(),
+        Callback observer = new Callback(future, nativePipe.getProducer(), nativePipe.getTimeKeeper(),
                                          nativePipe.getConsumer());
         nativePipe.asyncConsume(observer, timeout);
         return null;
@@ -203,7 +202,7 @@ public class Pipe implements IPipe {
         return consumer;
     }
 
-    protected TimeKeeper getTimer() {
-        return timer;
+    protected Observable getTimeKeeper() {
+        return timeKeeper;
     }
 }

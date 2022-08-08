@@ -8,11 +8,11 @@ import static org.nuvindu.pipe.utils.Utils.createError;
  * Observable class for the observers waiting for the timeKeeper.
  */
 public class Notifier extends TimerTask {
-    TimeKeeper timer;
+    Observable timeKeeper;
     Callback callback;
 
-    public Notifier(TimeKeeper timer, Callback callback) {
-        this.timer = timer;
+    public Notifier(Observable timeKeeper, Callback callback) {
+        this.timeKeeper = timeKeeper;
         this.callback = callback;
     }
 
@@ -21,7 +21,6 @@ public class Notifier extends TimerTask {
      */
     @Override
     public void run() {
-        this.timer.notifyObservers(createError("Operation has timed out."), this.callback);
-        this.cancel();
+        this.timeKeeper.notifyObservers(createError("Operation has timed out."), this.callback);
     }
 }

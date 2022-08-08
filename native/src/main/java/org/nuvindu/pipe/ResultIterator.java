@@ -36,7 +36,7 @@ public class ResultIterator {
         Pipe pipe = (Pipe) streamGenerator.getNativeData(NATIVE_PIPE);
         if (pipe != null) {
             Future future = env.markAsync();
-            Callback observer = new Callback(future, pipe.getProducer(), pipe.getTimer(), pipe.getConsumer());
+            Callback observer = new Callback(future, pipe.getProducer(), pipe.getTimeKeeper(), pipe.getConsumer());
             BDecimal timeout = (BDecimal) streamGenerator.getNativeData(TIME_OUT);
             pipe.asyncConsume(observer, timeout);
             return null;
