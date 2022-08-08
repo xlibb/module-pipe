@@ -32,6 +32,7 @@ import org.nuvindu.pipe.observer.Callback;
 import org.nuvindu.pipe.observer.Notifier;
 import org.nuvindu.pipe.observer.Observable;
 
+import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -52,6 +53,7 @@ public class Pipe implements IPipe {
     private ConcurrentLinkedQueue<Object> queue;
     private final AtomicInteger queueSize;
     private final Long limit;
+    private final Timer timer;
     private final AtomicBoolean isClosed;
     private final Observable producer;
     private final Observable consumer;
@@ -60,6 +62,7 @@ public class Pipe implements IPipe {
 
     public Pipe(Long limit) {
         this.limit = limit;
+        this.timer = new Timer();
         this.queue = new ConcurrentLinkedQueue<>();
         this.queueSize = new AtomicInteger(0);
         this.isClosed = new AtomicBoolean(false);
@@ -69,8 +72,9 @@ public class Pipe implements IPipe {
         this.timeKeeper = new Observable(null, null);
     }
 
-    public Pipe(Long limit, TimeKeeper timeKeeper) {
+    public Pipe(Long limit, Timer timer) {
         this.limit = limit;
+        this.timer = timer;
         this.queue = new ConcurrentLinkedQueue<>();
         this.queueSize = new AtomicInteger(0);
         this.isClosed = new AtomicBoolean(false);
@@ -126,7 +130,6 @@ public class Pipe implements IPipe {
             return createError("Closing of a closed pipe is not allowed.");
         }
         this.isClosed.compareAndSet(false, true);
-        this.timer.cancel();
         this.queue = null;
         return null;
     }
@@ -144,7 +147,6 @@ public class Pipe implements IPipe {
                         queue = null;
                         emptyQueue.unregisterObserver(callback);
                         callback.onSuccess(null);
-                        this.cancel();
                     }
                 }, (long) timeout.floatValue() * 1000);
             } else {

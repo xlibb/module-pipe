@@ -23,8 +23,13 @@ public isolated class Pipe {
     # Creates a new `pipe:Pipe` instance.
     #
     # + 'limit - The maximum number of entries that are held in the pipe at once
-    public isolated function init(int 'limit) {
-        self.nativePipeObject = newPipe('limit);
+    # + timer - The timer that used to keep track of time to notify the timeouts in APIs 
+    public isolated function init(int 'limit, handle? timer = ()) {
+        if timer is handle {
+            self.nativePipeObject = newPipeWithTimer('limit, timer);
+        } else {
+            self.nativePipeObject = newPipe('limit);
+        }
     }
 
     # Produces events into the pipe.
@@ -86,6 +91,10 @@ public isolated class Pipe {
 }
 
 isolated function newPipe(int 'limit) returns handle = @java:Constructor {
+    'class: "org.nuvindu.pipe.Pipe"
+} external;
+
+isolated function newPipeWithTimer(int 'limit, handle timer) returns handle = @java:Constructor {
     'class: "org.nuvindu.pipe.Pipe"
 } external;
 
