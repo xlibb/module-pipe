@@ -14,9 +14,10 @@
 // specific language governing permissions and limitations
 // under the License.
 
-import ballerina/time;
+import ballerina/jballerina.java;
 import ballerina/lang.runtime;
 import ballerina/test;
+import ballerina/time;
 
 @test:Config {
     groups: ["main_apis"]
@@ -194,7 +195,6 @@ function testWaitingInProduce() returns error? {
     }
 }
 
-
 @test:Config {
     groups: ["main_apis"]
 }
@@ -238,3 +238,48 @@ function testConcurrencyInPipe() returns error? {
         test:assertEquals(workerCount, 4);
     }
 }
+
+@test:Config {
+    groups: ["main_apis"]
+}
+function testPipesWithTimer() returns error? {
+    handle timeKeeper = newTimer();
+
+    Pipe timerPipe = new(5, timeKeeper);
+    Pipe timerPipe2 = new(5, timeKeeper);
+    Pipe timerPipe3 = new(5, timeKeeper);
+    string expectedValue = "pipe_test";
+
+    worker A {
+        runtime:sleep(1);
+        Error? produce = timerPipe.produce("pipe_test", timeout = 2);
+        test:assertTrue(produce !is Error);
+        string|Error actualValue1 = timerPipe.consume(5);
+        test:assertTrue(actualValue1 is Error);
+        test:assertEquals(actualValue1, expectedValue);
+    }
+
+    @strand {
+        thread: "any"
+    }
+    worker B {
+        Error? produce = timerPipe2.produce("pipe_test", timeout = 2);
+        test:assertTrue(produce !is Error);
+        string|Error actualValue2 = timerPipe2.consume(5);
+        test:assertTrue(actualValue2 is Error);
+        test:assertEquals(actualValue2, expectedValue);
+    }
+
+    worker C {
+        runtime:sleep(1);
+        Error? produce = timerPipe3.produce("pipe_test", timeout = 2);
+        test:assertTrue(produce !is Error);
+        string|Error actualValue3 = timerPipe3.consume(5);
+        test:assertTrue(actualValue3 is Error);
+        test:assertEquals(actualValue3, expectedValue);
+    }
+}
+
+function newTimer() returns handle = @java:Constructor {
+    'class: "java.util.Timer"
+} external;
