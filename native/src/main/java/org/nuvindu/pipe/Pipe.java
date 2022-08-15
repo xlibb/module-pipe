@@ -41,8 +41,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.nuvindu.pipe.utils.ModuleUtils.getModule;
 import static org.nuvindu.pipe.utils.Utils.NATIVE_PIPE;
 import static org.nuvindu.pipe.utils.Utils.NATIVE_PIPE_OBJECT;
+import static org.nuvindu.pipe.utils.Utils.NATIVE_TIMER_OBJECT;
 import static org.nuvindu.pipe.utils.Utils.RESULT_ITERATOR;
 import static org.nuvindu.pipe.utils.Utils.STREAM_GENERATOR;
+import static org.nuvindu.pipe.utils.Utils.TIMER;
 import static org.nuvindu.pipe.utils.Utils.TIME_OUT;
 import static org.nuvindu.pipe.utils.Utils.createError;
 
@@ -61,20 +63,12 @@ public class Pipe implements IPipe {
     private final Observable timeKeeper;
 
     public Pipe(Long limit) {
-        this.limit = limit;
-        this.timer = new Timer();
-        this.queue = new ConcurrentLinkedQueue<>();
-        this.queueSize = new AtomicInteger(0);
-        this.isClosed = new AtomicBoolean(false);
-        this.consumer = new Observable(this.queue, this.queueSize);
-        this.producer = new Observable(this.queue, this.queueSize);
-        this.emptyQueue = new Observable(null, null);
-        this.timeKeeper = new Observable(null, null);
+        this(limit, ValueCreator.createObjectValue(getModule(), TIMER));
     }
 
-    public Pipe(Long limit, Timer timer) {
+    public Pipe(Long limit, BObject timer) {
         this.limit = limit;
-        this.timer = timer;
+        this.timer = (Timer) ((BHandle) timer.get(NATIVE_TIMER_OBJECT)).getValue();
         this.queue = new ConcurrentLinkedQueue<>();
         this.queueSize = new AtomicInteger(0);
         this.isClosed = new AtomicBoolean(false);
@@ -134,6 +128,13 @@ public class Pipe implements IPipe {
         return null;
     }
 
+    public BError gracefulClose(Environment env, BDecimal timeout) {
+        Future future = env.markAsync();
+        Callback observer = new Callback(future, null, null, null);
+        asyncClose(observer, timeout);
+        return null;
+    }
+
     protected void asyncClose(Callback callback, BDecimal timeout) {
         if (this.isClosed.get()) {
             callback.onError(createError("Closing of a closed pipe is not allowed."));
@@ -184,15 +185,6 @@ public class Pipe implements IPipe {
         Callback observer = new Callback(future, nativePipe.getProducer(), nativePipe.getTimeKeeper(),
                                          nativePipe.getConsumer());
         nativePipe.asyncConsume(observer, timeout);
-        return null;
-    }
-
-    public static BError gracefulClose(Environment env, BObject pipe, BDecimal timeout) {
-        BHandle handle = (BHandle) pipe.get(NATIVE_PIPE_OBJECT);
-        Pipe nativePipe = (Pipe) handle.getValue();
-        Future future = env.markAsync();
-        Callback observer = new Callback(future, null, null, null);
-        nativePipe.asyncClose(observer, timeout);
         return null;
     }
 

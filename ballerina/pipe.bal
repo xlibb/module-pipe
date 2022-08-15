@@ -24,8 +24,8 @@ public isolated class Pipe {
     #
     # + 'limit - The maximum number of entries that are held in the pipe at once
     # + timer - The timer that used to keep track of time to notify the timeouts in APIs 
-    public isolated function init(int 'limit, handle? timer = ()) {
-        if timer is handle {
+    public isolated function init(int 'limit, Timer? timer = ()) {
+        if timer is Timer {
             self.nativePipeObject = newPipeWithTimer('limit, timer);
         } else {
             self.nativePipeObject = newPipe('limit);
@@ -76,9 +76,11 @@ public isolated class Pipe {
     #
     # + timeout - The maximum grace period to wait until the pipe is empty. The default timeout is thirty seconds
     # + return - Return `()`, if the pipe is successfully closed. Otherwise returns a `pipe:Error`
-    public isolated function gracefulClose(decimal timeout = 30) returns Error? = @java:Method {
-        'class: "org.nuvindu.pipe.Pipe"
-    } external;
+    public isolated function gracefulClose(decimal timeout = 30) returns Error? {
+        lock {
+            check gracefulClose(self.nativePipeObject, timeout);
+        }
+    }
 
     # Checks whether the pipe is closed.
     #
@@ -94,11 +96,15 @@ isolated function newPipe(int 'limit) returns handle = @java:Constructor {
     'class: "org.nuvindu.pipe.Pipe"
 } external;
 
-isolated function newPipeWithTimer(int 'limit, handle timer) returns handle = @java:Constructor {
+isolated function newPipeWithTimer(int 'limit, Timer timer) returns handle = @java:Constructor {
     'class: "org.nuvindu.pipe.Pipe"
 } external;
 
 isolated function immediateClose(handle pipe) returns Error? = @java:Method {
+    'class: "org.nuvindu.pipe.Pipe"
+} external;
+
+isolated function gracefulClose(handle pipe, decimal timeout) returns Error? = @java:Method {
     'class: "org.nuvindu.pipe.Pipe"
 } external;
 

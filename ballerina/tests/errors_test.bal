@@ -102,7 +102,7 @@ function testClosingOfClosedStreamInPipe() returns error? {
     groups: ["main_apis"]
 }
 function testErrorsInPipesWithTimer() returns error? {
-    handle timeKeeper = newTimer();
+    Timer timeKeeper = new();
     Pipe timerPipe = new (1, timeKeeper);
     Pipe timerPipe2 = new (1, timeKeeper);
     Pipe timerPipe3 = new(5, timeKeeper);

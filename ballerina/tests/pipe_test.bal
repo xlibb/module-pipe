@@ -14,7 +14,6 @@
 // specific language governing permissions and limitations
 // under the License.
 
-import ballerina/jballerina.java;
 import ballerina/lang.runtime;
 import ballerina/test;
 import ballerina/time;
@@ -243,7 +242,7 @@ function testConcurrencyInPipe() returns error? {
     groups: ["main_apis"]
 }
 function testPipesWithTimer() returns error? {
-    handle timeKeeper = newTimer();
+    Timer timeKeeper = new();
 
     Pipe timerPipe = new(5, timeKeeper);
     Pipe timerPipe2 = new(5, timeKeeper);
@@ -279,7 +278,3 @@ function testPipesWithTimer() returns error? {
         test:assertEquals(actualValue3, expectedValue);
     }
 }
-
-function newTimer() returns handle = @java:Constructor {
-    'class: "java.util.Timer"
-} external;
