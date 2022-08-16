@@ -18,7 +18,7 @@ import ballerina/jballerina.java;
 
 # Represents Ballerina Timer class to schedule tasks with a timeout.
 public isolated distinct class Timer {
-    private handle nativeTimerObject;
+    private final handle nativeTimerObject;
 
     public isolated function init() {
         self.nativeTimerObject = getTimer();
