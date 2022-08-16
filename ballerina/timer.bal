@@ -20,7 +20,7 @@ import ballerina/jballerina.java;
 public isolated distinct class Timer {
     private handle nativeTimerObject;
 
-    public function init() {
+    public isolated function init() {
         self.nativeTimerObject = getTimer();
     }
 }
