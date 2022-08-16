@@ -10,4 +10,4 @@ distribution = "2201.0.1"
 icon = "icon.png"
 
 [[platform.java11.dependency]]
-path = "../native/build/libs/pipe-native-0.1.4-SNAPSHOT.jar"
+path = "../native/build/libs/pipe-native-0.1.4.jar"
