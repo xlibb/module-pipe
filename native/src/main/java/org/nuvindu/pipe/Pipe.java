@@ -128,13 +128,6 @@ public class Pipe implements IPipe {
         return null;
     }
 
-    public BError gracefulClose(Environment env, BDecimal timeout) {
-        Future future = env.markAsync();
-        Callback observer = new Callback(future, null, null, null);
-        asyncClose(observer, timeout);
-        return null;
-    }
-
     protected void asyncClose(Callback callback, BDecimal timeout) {
         if (this.isClosed.get()) {
             callback.onError(createError("Closing of a closed pipe is not allowed."));
@@ -185,6 +178,15 @@ public class Pipe implements IPipe {
         Callback observer = new Callback(future, nativePipe.getProducer(), nativePipe.getTimeKeeper(),
                                          nativePipe.getConsumer());
         nativePipe.asyncConsume(observer, timeout);
+        return null;
+    }
+
+    public static BError gracefulClose(Environment env, BObject pipe, BDecimal timeout) {
+        BHandle handle = (BHandle) pipe.get(NATIVE_PIPE_OBJECT);
+        Pipe nativePipe = (Pipe) handle.getValue();
+        Future future = env.markAsync();
+        Callback observer = new Callback(future, null, null, null);
+        nativePipe.asyncClose(observer, timeout);
         return null;
     }
 

@@ -76,11 +76,9 @@ public isolated class Pipe {
     #
     # + timeout - The maximum grace period to wait until the pipe is empty. The default timeout is thirty seconds
     # + return - Return `()`, if the pipe is successfully closed. Otherwise returns a `pipe:Error`
-    public isolated function gracefulClose(decimal timeout = 30) returns Error? {
-        lock {
-            check gracefulClose(self.nativePipeObject, timeout);
-        }
-    }
+    public isolated function gracefulClose(decimal timeout = 30) returns Error? = @java:Method {
+        'class: "org.nuvindu.pipe.Pipe"
+    } external;
 
     # Checks whether the pipe is closed.
     #
@@ -101,10 +99,6 @@ isolated function newPipeWithTimer(int 'limit, Timer timer) returns handle = @ja
 } external;
 
 isolated function immediateClose(handle pipe) returns Error? = @java:Method {
-    'class: "org.nuvindu.pipe.Pipe"
-} external;
-
-isolated function gracefulClose(handle pipe, decimal timeout) returns Error? = @java:Method {
     'class: "org.nuvindu.pipe.Pipe"
 } external;
 
