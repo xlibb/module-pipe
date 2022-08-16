@@ -17,8 +17,10 @@ public class Utils {
 
     // Internal type names
     public static final String ERROR_TYPE = "Error";
-    public static final BString JAVA_PIPE_OBJECT = StringUtils.fromString("javaPipeObject");
+    public static final BString NATIVE_PIPE_OBJECT = StringUtils.fromString("nativePipeObject");
+    public static final BString NATIVE_TIMER_OBJECT = StringUtils.fromString("nativeTimerObject");
     public static final String NATIVE_PIPE = "nativePipe";
+    public static final String TIMER = "Timer";
     public static final String RESULT_ITERATOR = "ResultIterator";
     public static final String STREAM_GENERATOR = "StreamGenerator";
     public static final String TIME_OUT = "timeOut";

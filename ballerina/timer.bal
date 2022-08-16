@@ -14,14 +14,18 @@
 // specific language governing permissions and limitations
 // under the License.
 
-package org.nuvindu.pipe;
+import ballerina/jballerina.java;
 
-import io.ballerina.runtime.api.values.BError;
+# Represents Ballerina Timer class to schedule tasks with a timeout.
+public distinct class Timer {
+    private handle nativeTimerObject;
 
-/**
- * Abstract APIs of the Pipe class.
- */
-public interface IPipe {
-    public boolean isClosed();
-    public BError immediateClose();
+    public function init() {
+        self.nativeTimerObject = getTimer();
+    }
 }
+
+public isolated function getTimer() returns handle = @java:Constructor {
+    'class: "java.util.Timer"
+} external;
+

@@ -16,9 +16,12 @@
 
 package org.nuvindu.pipe;
 
+import io.ballerina.runtime.api.Environment;
+import io.ballerina.runtime.api.Future;
 import io.ballerina.runtime.api.values.BDecimal;
 import io.ballerina.runtime.api.values.BError;
 import io.ballerina.runtime.api.values.BObject;
+import org.nuvindu.pipe.observer.Callback;
 
 import static org.nuvindu.pipe.utils.Utils.NATIVE_PIPE;
 import static org.nuvindu.pipe.utils.Utils.TIME_OUT;
@@ -29,27 +32,29 @@ import static org.nuvindu.pipe.utils.Utils.createError;
  */
 public class ResultIterator {
 
-    public static Object nextValue(BObject streamGenerator) {
+    public static Object nextValue(Environment env, BObject streamGenerator) {
         Pipe pipe = (Pipe) streamGenerator.getNativeData(NATIVE_PIPE);
         if (pipe != null) {
-            BDecimal timeOut = (BDecimal) streamGenerator.getNativeData(TIME_OUT);
-            return pipe.consumeData(timeOut);
+            Future future = env.markAsync();
+            Callback observer = new Callback(future, pipe.getProducer(), pipe.getTimeKeeper(), pipe.getConsumer());
+            BDecimal timeout = (BDecimal) streamGenerator.getNativeData(TIME_OUT);
+            pipe.asyncConsume(observer, timeout);
+            return null;
         }
         return createError("Events cannot be consumed after the stream is closed");
     }
 
-    public static BError close(BObject streamGenerator) {
+    public static BError close(Environment env, BObject streamGenerator) {
         BDecimal timeOut = (BDecimal) streamGenerator.getNativeData(TIME_OUT);
         Pipe pipe = ((Pipe) streamGenerator.getNativeData(NATIVE_PIPE));
         if (pipe == null) {
-            return createError("Failed to close the stream.", 
-                               createError("Closing of a closed pipe is not allowed."));
+            BError cause = createError("Closing of a closed pipe is not allowed.");
+            return createError("Failed to close the stream.", cause);
         }
-        BError gracefulClose = pipe.gracefulClose(timeOut);
-        if (gracefulClose == null) {
-            streamGenerator.addNativeData(NATIVE_PIPE, null);
-            return null;
-        }
-        return createError("Failed to close the stream.", gracefulClose);
+        Future future = env.markAsync();
+        Callback observer = new Callback(future, null, null, null);
+        pipe.asyncClose(observer, timeOut);
+        streamGenerator.addNativeData(NATIVE_PIPE, null);
+        return null;
     }
 }

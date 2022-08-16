@@ -18,13 +18,18 @@ import ballerina/jballerina.java;
 
 # Consists of APIs to exchange events concurrently.
 public isolated class Pipe {
-    private handle javaPipeObject;
+    private handle nativePipeObject;
 
     # Creates a new `pipe:Pipe` instance.
     #
     # + 'limit - The maximum number of entries that are held in the pipe at once
-    public isolated function init(int 'limit) {
-        self.javaPipeObject = newPipe('limit);
+    # + timer - The timer that used to keep track of time to notify the timeouts in APIs 
+    public isolated function init(int 'limit, Timer? timer = ()) {
+        if timer is Timer {
+            self.nativePipeObject = newPipeWithTimer('limit, timer);
+        } else {
+            self.nativePipeObject = newPipe('limit);
+        }
     }
 
     # Produces events into the pipe.
@@ -63,7 +68,7 @@ public isolated class Pipe {
     # + return - Return `()`, if the pipe is successfully closed. Otherwise returns a `pipe:Error`
     public isolated function immediateClose() returns Error? {
         lock {
-            check immediateClose(self.javaPipeObject);
+            check immediateClose(self.nativePipeObject);
         }
     }
 
@@ -71,18 +76,16 @@ public isolated class Pipe {
     #
     # + timeout - The maximum grace period to wait until the pipe is empty. The default timeout is thirty seconds
     # + return - Return `()`, if the pipe is successfully closed. Otherwise returns a `pipe:Error`
-    public isolated function gracefulClose(decimal timeout = 30) returns Error? {
-        lock {
-            check gracefulClose(self.javaPipeObject, timeout);
-        }
-    }
+    public isolated function gracefulClose(decimal timeout = 30) returns Error? = @java:Method {
+        'class: "org.nuvindu.pipe.Pipe"
+    } external;
 
     # Checks whether the pipe is closed.
     #
     # + return - Returns `true`, if the pipe is closed. Otherwise returns `false`
     public isolated function isClosed() returns boolean {
         lock {
-            return isClosed(self.javaPipeObject);
+            return isClosed(self.nativePipeObject);
         }
     }
 }
@@ -91,11 +94,11 @@ isolated function newPipe(int 'limit) returns handle = @java:Constructor {
     'class: "org.nuvindu.pipe.Pipe"
 } external;
 
-isolated function immediateClose(handle pipe) returns Error? = @java:Method {
+isolated function newPipeWithTimer(int 'limit, Timer timer) returns handle = @java:Constructor {
     'class: "org.nuvindu.pipe.Pipe"
 } external;
 
-isolated function gracefulClose(handle pipe, decimal timeout) returns Error? = @java:Method {
+isolated function immediateClose(handle pipe) returns Error? = @java:Method {
     'class: "org.nuvindu.pipe.Pipe"
 } external;
 

@@ -15,6 +15,7 @@
 // under the License.
 
 import ballerina/test;
+import ballerina/time;
 
 @test:Config {
     groups: ["errors"]
@@ -67,16 +68,19 @@ function testImmediateClosingOfClosedPipe() returns error? {
 }
 
 @test:Config {
-    groups: ["errors","close"]
+    groups: ["errors", "close"]
 }
 function testGracefulClosingOfClosedPipe() returns error? {
     Pipe pipe = new (1);
     string expectedValue = "Closing of a closed pipe is not allowed.";
+    time:Utc currentUtc = time:utcNow();
     check pipe.gracefulClose();
     Error? gracefulCloseResult = pipe.gracefulClose();
     test:assertTrue(gracefulCloseResult is Error);
     string actualValueValue = (<error>gracefulCloseResult).message();
     test:assertEquals(actualValueValue, expectedValue);
+    int val = time:utcNow()[0] - currentUtc[0];
+    test:assertTrue(val < 30);
 }
 
 @test:Config {
@@ -92,4 +96,43 @@ function testClosingOfClosedStreamInPipe() returns error? {
     test:assertTrue(close is error);
     string actualValue = (<error>close).message();
     test:assertEquals(actualValue, expectedValue);
+}
+
+@test:Config {
+    groups: ["main_apis"]
+}
+function testErrorsInPipesWithTimer() returns error? {
+    Timer timeKeeper = new();
+    Pipe timerPipe = new (1, timeKeeper);
+    Pipe timerPipe2 = new (1, timeKeeper);
+    Pipe timerPipe3 = new(5, timeKeeper);
+    string expectedError = "Operation has timed out.";
+
+    worker A {       
+        Error? produce = timerPipe.produce("data1", timeout = 1);
+        test:assertTrue(produce !is Error);
+        Error? result1 = timerPipe.produce("data2", timeout = 1);
+        test:assertTrue(result1 is Error);
+        string actualValue1 = (<error>result1).message();
+        test:assertEquals(actualValue1, expectedError);
+    }
+
+    @strand {
+        thread: "any"
+    }
+    worker B {
+        string|Error result2 = timerPipe2.consume(timeout = 1);
+        test:assertTrue(result2 is Error);
+        string actualValue2 = (<error>result2).message();
+        test:assertEquals(actualValue2, expectedError);
+    }
+
+    worker C {
+        string expectedValue = "pipe_test";
+        Error? produce = timerPipe3.produce(expectedValue, timeout = 2);
+        test:assertTrue(produce !is Error);
+        string|Error actualValue3 = timerPipe3.consume(5);
+        test:assertTrue(actualValue3 is Error);
+        test:assertEquals(actualValue3, expectedValue);
+    }
 }
