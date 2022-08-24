@@ -1,0 +1,15 @@
+[container.image]
+repository="wso2inc" # Ex - Docker hub repository name.
+name="module-pipe" # Container name
+tag="v0.1.0"
+
+[cloud.deployment]
+min_memory = "256Mi"
+max_memory = "512Mi"
+min_cpu = "200m"
+max_cpu = "1000m"
+
+[cloud.deployment.autoscaling]
+min_replicas=2 # Minimum number of container instances ran at a given time
+max_replicas=5 # Maximum number of replicas of the container can scale up to
+cpu=60
