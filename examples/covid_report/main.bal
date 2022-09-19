@@ -36,9 +36,6 @@ public function main() returns error? {
         }
     }
 
-    @strand {
-        thread: "any"
-    }
     worker B {
         stream<Report, error?> covidReports = pipe.consumeStream(timeout = 5.12323);
         CovidRecord|error? covidRecord = covidReports.next();

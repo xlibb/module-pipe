@@ -131,9 +131,7 @@ function testWaitingInGracefulClose() returns error? {
         string actualErrorMessage = (<error>actualError).message();
         test:assertEquals(actualErrorMessage, expectedErrorMessage);
     }
-    @strand {
-        thread: "any"
-    }
+
     worker B {
         Error? close = pipe.gracefulClose();
         test:assertTrue(close !is Error);
@@ -154,9 +152,6 @@ function testWaitingInConsume() returns error? {
         test:assertTrue(produce !is Error);
     }
 
-    @strand {
-        thread: "any"
-    }
     worker B {
         int|Error actualValue = pipe.consume(30);
         test:assertTrue(actualValue !is Error);
@@ -183,9 +178,6 @@ function testWaitingInProduce() returns error? {
         test:assertEquals(actualValue, expectedNextValue);
     }
 
-    @strand {
-        thread: "any"
-    }
     worker B {
         runtime:sleep(5);
         int|Error actualValue = pipe.consume(30);
@@ -208,9 +200,6 @@ function testConcurrencyInPipe() returns error? {
         workerCount+=1;
     }
 
-    @strand {
-        thread: "any"
-    }
     worker B {
         int|Error actualValue = pipe.consume(6);
         test:assertTrue(actualValue !is Error);
@@ -258,9 +247,6 @@ function testPipesWithTimer() returns error? {
         test:assertEquals(actualValue1, expectedValue);
     }
 
-    @strand {
-        thread: "any"
-    }
     worker B {
         Error? produce = timerPipe2.produce("pipe_test", timeout = 2);
         test:assertTrue(produce !is Error);

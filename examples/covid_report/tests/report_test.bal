@@ -30,9 +30,6 @@ function testPipeConcurrently() returns error? {
         }
     }
 
-    @strand {
-        thread: "any"
-    }
     worker B {
         stream<int, error?> intStream = pipe.consumeStream(timeout = 10.12323);
         IntRecord|error? 'record = intStream.next();
@@ -63,9 +60,6 @@ function testPipeWithObjectsConcurrently() returns error? {
         test:assertTrue(produce !is pipe:Error);
     }
 
-    @strand {
-        thread: "any"
-    }
     worker B {
         stream<Report, error?> covidReports = pipe.consumeStream(timeout = 10.12323);
         CovidRecord|error? covidRecord = covidReports.next();

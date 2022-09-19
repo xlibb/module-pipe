@@ -117,9 +117,6 @@ function testErrorsInPipesWithTimer() returns error? {
         test:assertEquals(actualValue1, expectedError);
     }
 
-    @strand {
-        thread: "any"
-    }
     worker B {
         string|Error result2 = timerPipe2.consume(timeout = 1);
         test:assertTrue(result2 is Error);
