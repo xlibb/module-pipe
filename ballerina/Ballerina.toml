@@ -6,7 +6,7 @@ authors = ["Nuvindu"]
 keywords = ["pipe"]
 repository = "https://github.com/Nuvindu/module-pipe"
 license = ["Apache-2.0"]
-distribution = "2201.0.1"
+distribution = "2201.2.0"
 icon = "icon.png"
 
 [[platform.java11.dependency]]
