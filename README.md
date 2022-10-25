@@ -7,6 +7,8 @@
 
 This library provides a medium to send and receive events simultaneously. And it includes APIs to produce, consume and return events via a stream.
 
+**Note:** This library is originally developed by @Nuvindu and it is then moved to the xlibb organization.
+
 ## Pipe
 
 The pipe allows you to send events from one place to another. The pipe can hold up to n number of data. In case the pipe is full, the `produce` method blocks until there is a free slot to produce data. On the other hand, in case the pipe is empty, the `consume` method blocks until there is some data to consume.
