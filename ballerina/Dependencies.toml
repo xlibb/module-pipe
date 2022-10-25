@@ -51,7 +51,7 @@ modules = [
 ]
 
 [[package]]
-org = "nuvindu"
+org = "xlibb"
 name = "pipe"
 version = "1.0.1"
 dependencies = [
@@ -61,7 +61,7 @@ dependencies = [
 	{org = "ballerina", name = "time"}
 ]
 modules = [
-	{org = "nuvindu", packageName = "pipe", moduleName = "pipe"}
+	{org = "xlibb", packageName = "pipe", moduleName = "pipe"}
 ]
 
 
