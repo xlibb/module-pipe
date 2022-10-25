@@ -59,9 +59,9 @@ subprojects {
 
     dependencies {
         /* Standard libraries */
-        ballerinaStdLibs "io.ballerina.stdlib:io-ballerina:${project.stdlibIoVersion}"
-        ballerinaStdLibs "io.ballerina.stdlib:log-ballerina:${project.stdlibLogVersion}"
-        ballerinaStdLibs "io.ballerina.stdlib:time-ballerina:${project.stdlibTimeVersion}"
+        ballerinaStdLibs "io.ballerina.stdlib:io-ballerina:${stdlibIoVersion}"
+        ballerinaStdLibs "io.ballerina.stdlib:log-ballerina:${stdlibLogVersion}"
+        ballerinaStdLibs "io.ballerina.stdlib:time-ballerina:${stdlibTimeVersion}"
         ballerinaStdLibs "io.ballerina.stdlib:observe-ballerina:${observeVersion}"
         ballerinaStdLibs "io.ballerina:observe-ballerina:${observeInternalVersion}"
     }
