@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class Callback implements IObserver {
     Future future;
     Observable timeKeeper;
-    Object events;
+    Object event;
     Observable observable;
     Observable notifyObservable;
     AtomicBoolean atomicUpdate;
@@ -26,8 +26,8 @@ public class Callback implements IObserver {
         this.atomicUpdate = new AtomicBoolean(false);
     }
 
-    public void setEvents(Object events) {
-        this.events = events;
+    public void setEvent(Object event) {
+        this.event = event;
     }
 
     @Override
@@ -42,9 +42,9 @@ public class Callback implements IObserver {
     @Override
     public void onConsume(ConcurrentLinkedQueue<Object> queue, AtomicInteger queueSize) {
         if (atomicUpdate.compareAndSet(false, true)) {
-            queue.add(events);
+            queue.add(event);
             queueSize.incrementAndGet();
-            this.notifyObservable.notifyObservers(events);
+            this.notifyObservable.notifyObservers(event);
             this.timeKeeper.unregisterObserver(this);
             this.observable.unregisterObserver(this);
             onSuccess(null);

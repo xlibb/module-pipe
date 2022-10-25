@@ -32,18 +32,18 @@ public isolated class Pipe {
         }
     }
 
-    # Produces events into the pipe.
+    # Produces an event into the pipe.
     #
-    # + events - Events that needs to be produced to the pipe. Can be `any` type
-    # + timeout - The maximum waiting period that holds events
-    # + return - Returns `()` if events is successfully produced. Otherwise returns a `pipe:Error`
-    public isolated function produce(any events, decimal timeout) returns Error? = @java:Method {
+    # + event - The event that needs to be produced to the pipe. Can be `any` type
+    # + timeout - The maximum waiting period that holds the event
+    # + return - Returns `()` if the event is successfully produced. Otherwise returns a `pipe:Error`
+    public isolated function produce(any event, decimal timeout) returns Error? = @java:Method {
         'class: "io.xlibb.pipe.Pipe"
     } external;
 
-    # Consumes events in the pipe.
+    # Consumes an event in the pipe.
     #
-    # + timeout - The maximum waiting period to consume events
+    # + timeout - The maximum waiting period to consume the event
     # + typeParam - The `type` of data that is needed to be consumed. When not provided, the type is inferred
     # using the expected type from the function
     # + return - Return type is inferred from the user specified type. That should be the same event type

@@ -78,21 +78,21 @@ public class Pipe implements IPipe {
         this.timeKeeper = new Observable(null, null);
     }
 
-    protected void asyncProduce(Callback callback, Object events, BDecimal timeout) {
-        if (events == null) {
+    protected void asyncProduce(Callback callback, Object event, BDecimal timeout) {
+        if (event == null) {
             callback.onError(createError("Nil values cannot be produced to a pipe."));
         } else if (this.isClosed.get()) {
             callback.onError(createError("Events cannot be produced to a closed pipe."));
         } else if (this.queueSize.get() == this.limit) {
-            callback.setEvents(events);
+            callback.setEvent(event);
             this.timeKeeper.registerObserver(callback);
             this.consumer.registerObserver(callback);
             Notifier notifier = new Notifier(this.timeKeeper, callback);
             this.timer.schedule(notifier, (long) timeout.floatValue() * 1000);
         } else {
-            queue.add(events);
+            queue.add(event);
             queueSize.incrementAndGet();
-            this.producer.notifyObservers(events);
+            this.producer.notifyObservers(event);
             callback.onSuccess(null);
         }
     }
@@ -161,13 +161,13 @@ public class Pipe implements IPipe {
                                               streamGenerator);
     }
 
-    public static BError produce(Environment env, BObject pipe, Object events, BDecimal timeout) {
+    public static BError produce(Environment env, BObject pipe, Object event, BDecimal timeout) {
         BHandle handle = (BHandle) pipe.get(NATIVE_PIPE_OBJECT);
         Pipe nativePipe = (Pipe) handle.getValue();
         Future future = env.markAsync();
         Callback observer = new Callback(future, nativePipe.getConsumer(), nativePipe.getTimeKeeper(),
                                          nativePipe.getProducer());
-        nativePipe.asyncProduce(observer, events, timeout);
+        nativePipe.asyncProduce(observer, event, timeout);
         return null;
     }
 
