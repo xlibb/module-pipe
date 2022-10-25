@@ -1,8 +1,8 @@
-package org.nuvindu.pipe.observer;
+package io.xlibb.pipe.observer;
+
+import io.xlibb.pipe.utils.Utils;
 
 import java.util.TimerTask;
-
-import static org.nuvindu.pipe.utils.Utils.createError;
 
 /**
  * Observable class for the observers waiting for the timeKeeper.
@@ -21,6 +21,6 @@ public class Notifier extends TimerTask {
      */
     @Override
     public void run() {
-        this.timeKeeper.notifyObservers(createError("Operation has timed out."), this.callback);
+        this.timeKeeper.notifyObservers(Utils.createError("Operation has timed out."), this.callback);
     }
 }

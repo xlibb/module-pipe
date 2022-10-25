@@ -1,13 +1,13 @@
 [package]
-org = "nuvindu"
+org = "xlibb"
 name = "pipe"
-version = "1.0.0"
-authors = ["Nuvindu"]
+version = "1.0.1"
+authors = ["xlibb"]
 keywords = ["pipe"]
-repository = "https://github.com/Nuvindu/module-pipe"
+repository = "https://github.com/xlibb/module-pipe"
 license = ["Apache-2.0"]
 distribution = "2201.2.0"
 icon = "icon.png"
 
 [[platform.java11.dependency]]
-path = "../native/build/libs/pipe-native-1.0.0.jar"
+path = "../native/build/libs/pipe-native-1.0.1-SNAPSHOT.jar"

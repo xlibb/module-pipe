@@ -15,7 +15,7 @@
 // under the License.
 
 import ballerina/test;
-import nuvindu/pipe;
+import xlibb/pipe;
 
 @test:Config {
     groups: ["examples", "covid_report"]

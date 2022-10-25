@@ -14,10 +14,10 @@
 // specific language governing permissions and limitations
 // under the License.
 
-import nuvindu/pipe;
 import ballerina/io;
 import ballerina/log;
 import ballerina/lang.runtime;
+import xlibb/pipe;
 
 public function main() returns error? {
     pipe:Pipe pipe = new (5);

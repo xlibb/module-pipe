@@ -1,4 +1,4 @@
-package org.nuvindu.pipe.observer;
+package io.xlibb.pipe.observer;
 
 import io.ballerina.runtime.api.values.BError;
 
@@ -41,13 +41,6 @@ public class Observable implements IObservable {
     public void notifyObservers() {
         if (!callbackList.isEmpty()) {
             callbackList.remove(0).onConsume(this.queue, this.queueSize);
-        }
-    }
-
-    @Override
-    public void notifyObservers(BError bError) {
-        if (!callbackList.isEmpty()) {
-            callbackList.remove(0).onTimeout(bError);
         }
     }
 

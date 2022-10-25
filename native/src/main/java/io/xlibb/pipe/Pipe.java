@@ -14,7 +14,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-package org.nuvindu.pipe;
+package io.xlibb.pipe;
 
 import io.ballerina.runtime.api.Environment;
 import io.ballerina.runtime.api.Future;
@@ -28,9 +28,9 @@ import io.ballerina.runtime.api.values.BHandle;
 import io.ballerina.runtime.api.values.BObject;
 import io.ballerina.runtime.api.values.BStream;
 import io.ballerina.runtime.api.values.BTypedesc;
-import org.nuvindu.pipe.observer.Callback;
-import org.nuvindu.pipe.observer.Notifier;
-import org.nuvindu.pipe.observer.Observable;
+import io.xlibb.pipe.observer.Callback;
+import io.xlibb.pipe.observer.Notifier;
+import io.xlibb.pipe.observer.Observable;
 
 import java.util.Timer;
 import java.util.TimerTask;
@@ -38,15 +38,15 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.nuvindu.pipe.utils.ModuleUtils.getModule;
-import static org.nuvindu.pipe.utils.Utils.NATIVE_PIPE;
-import static org.nuvindu.pipe.utils.Utils.NATIVE_PIPE_OBJECT;
-import static org.nuvindu.pipe.utils.Utils.NATIVE_TIMER_OBJECT;
-import static org.nuvindu.pipe.utils.Utils.RESULT_ITERATOR;
-import static org.nuvindu.pipe.utils.Utils.STREAM_GENERATOR;
-import static org.nuvindu.pipe.utils.Utils.TIMER;
-import static org.nuvindu.pipe.utils.Utils.TIME_OUT;
-import static org.nuvindu.pipe.utils.Utils.createError;
+import static io.xlibb.pipe.utils.ModuleUtils.getModule;
+import static io.xlibb.pipe.utils.Utils.NATIVE_PIPE;
+import static io.xlibb.pipe.utils.Utils.NATIVE_PIPE_OBJECT;
+import static io.xlibb.pipe.utils.Utils.NATIVE_TIMER_OBJECT;
+import static io.xlibb.pipe.utils.Utils.RESULT_ITERATOR;
+import static io.xlibb.pipe.utils.Utils.STREAM_GENERATOR;
+import static io.xlibb.pipe.utils.Utils.TIMER;
+import static io.xlibb.pipe.utils.Utils.TIME_OUT;
+import static io.xlibb.pipe.utils.Utils.createError;
 
 /**
  * Provide APIs to exchange events concurrently.
@@ -78,28 +78,28 @@ public class Pipe implements IPipe {
         this.timeKeeper = new Observable(null, null);
     }
 
-    protected void asyncProduce(Callback callback, Object events, BDecimal timeout) {
-        if (events == null) {
+    protected void asyncProduce(Callback callback, Object event, BDecimal timeout) {
+        if (event == null) {
             callback.onError(createError("Nil values cannot be produced to a pipe."));
         } else if (this.isClosed.get()) {
             callback.onError(createError("Events cannot be produced to a closed pipe."));
         } else if (this.queueSize.get() == this.limit) {
-            callback.setEvents(events);
+            callback.setEvent(event);
             this.timeKeeper.registerObserver(callback);
             this.consumer.registerObserver(callback);
             Notifier notifier = new Notifier(this.timeKeeper, callback);
             this.timer.schedule(notifier, (long) timeout.floatValue() * 1000);
         } else {
-            queue.add(events);
+            queue.add(event);
             queueSize.incrementAndGet();
-            this.producer.notifyObservers(events);
+            this.producer.notifyObservers(event);
             callback.onSuccess(null);
         }
     }
 
     protected void asyncConsume(Callback callback, BDecimal timeout) {
         if (this.queue == null) {
-            callback.onError(createError("No any event is available in the closed pipe."));
+            callback.onError(createError("No events available in the pipe."));
         } else if (this.queueSize.get() == 0) {
             this.emptyQueue.notifyObservers(true);
             this.producer.registerObserver(callback);
@@ -161,13 +161,13 @@ public class Pipe implements IPipe {
                                               streamGenerator);
     }
 
-    public static BError produce(Environment env, BObject pipe, Object events, BDecimal timeout) {
+    public static BError produce(Environment env, BObject pipe, Object event, BDecimal timeout) {
         BHandle handle = (BHandle) pipe.get(NATIVE_PIPE_OBJECT);
         Pipe nativePipe = (Pipe) handle.getValue();
         Future future = env.markAsync();
         Callback observer = new Callback(future, nativePipe.getConsumer(), nativePipe.getTimeKeeper(),
                                          nativePipe.getProducer());
-        nativePipe.asyncProduce(observer, events, timeout);
+        nativePipe.asyncProduce(observer, event, timeout);
         return null;
     }
 

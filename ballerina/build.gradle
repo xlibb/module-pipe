@@ -35,7 +35,7 @@ buildscript {
 description = 'Ballerina - Pipe Package'
 
 def packageName = "pipe"
-def packageOrg = "nuvindu"
+def packageOrg = "xlibb"
 def tomlVersion = stripBallerinaExtensionVersion("${project.version}")
 def ballerinaTomlFilePlaceHolder = new File("${project.rootDir}/build-config/resources/Ballerina.toml")
 def ballerinaTomlFile = new File("$project.projectDir/Ballerina.toml")
@@ -60,7 +60,7 @@ ballerina {
     packageOrganization = packageOrg
     module = packageName
     langVersion = ballerinaLangVersion
-    testCoverageParam = "--code-coverage --coverage-format=xml --includes=org.nuvindu.pipe.*:nuvindu.pipe*"
+    testCoverageParam = "--code-coverage --coverage-format=xml --includes=io.xlibb.pipe.*:xlibb.pipe*"
 }
 
 task updateTomlFiles {
@@ -94,7 +94,7 @@ publishing {
     repositories {
         maven {
             name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/Nuvindu/module-pipe")
+            url = uri("https://maven.pkg.github.com/xlibb/module-pipe")
             credentials {
                 username = System.getenv("publishUser")
                 password = System.getenv("publishPAT")

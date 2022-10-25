@@ -36,10 +36,10 @@ class StreamGenerator {
 class ResultIterator {
 
     isolated function nextValue(StreamGenerator streamGenerator) returns any|Error = @java:Method {
-        'class: "org.nuvindu.pipe.ResultIterator"
+        'class: "io.xlibb.pipe.ResultIterator"
     } external;
 
     isolated function close(StreamGenerator streamGenerator) returns Error? = @java:Method {
-        'class: "org.nuvindu.pipe.ResultIterator"
+        'class: "io.xlibb.pipe.ResultIterator"
     } external;
 }
