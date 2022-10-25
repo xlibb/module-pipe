@@ -1,10 +1,10 @@
 [package]
-org = "nuvindu"
+org = "xlibb"
 name = "pipe"
 version = "@toml.version@"
-authors = ["Nuvindu"]
+authors = ["xlibb"]
 keywords = ["pipe"]
-repository = "https://github.com/Nuvindu/module-pipe"
+repository = "https://github.com/xlibb/module-pipe"
 license = ["Apache-2.0"]
 distribution = "2201.2.0"
 icon = "icon.png"

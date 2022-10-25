@@ -14,7 +14,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-package org.nuvindu.pipe;
+package io.xlibb.pipe;
 
 import io.ballerina.runtime.api.values.BError;
 

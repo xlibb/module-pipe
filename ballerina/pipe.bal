@@ -38,7 +38,7 @@ public isolated class Pipe {
     # + timeout - The maximum waiting period that holds events
     # + return - Returns `()` if events is successfully produced. Otherwise returns a `pipe:Error`
     public isolated function produce(any events, decimal timeout) returns Error? = @java:Method {
-        'class: "org.nuvindu.pipe.Pipe"
+        'class: "Pipe"
     } external;
 
     # Consumes events in the pipe.
@@ -50,7 +50,7 @@ public isolated class Pipe {
     # produced to the pipe. Otherwise, returns a `pipe:Error`
     public isolated function consume(decimal timeout, typedesc<any> typeParam = <>)
         returns typeParam|Error = @java:Method {
-        'class: "org.nuvindu.pipe.Pipe"
+        'class: "Pipe"
     } external;
 
     # Consumes events in the pipe as a `stream`
@@ -61,7 +61,7 @@ public isolated class Pipe {
     # + return - Returns a `stream`. The stream type is inferred from the user specified type
     public isolated function consumeStream(decimal timeout, typedesc<any> typeParam = <>)
         returns stream<typeParam, error?> = @java:Method {
-        'class: "org.nuvindu.pipe.Pipe"
+        'class: "Pipe"
     } external;
 
     # Closes the pipe instantly.
@@ -77,7 +77,7 @@ public isolated class Pipe {
     # + timeout - The maximum grace period to wait until the pipe is empty
     # + return - Return `()`, if the pipe is successfully closed. Otherwise returns a `pipe:Error`
     public isolated function gracefulClose(decimal timeout = 30) returns Error? = @java:Method {
-        'class: "org.nuvindu.pipe.Pipe"
+        'class: "Pipe"
     } external;
 
     # Checks whether the pipe is closed.
@@ -91,17 +91,17 @@ public isolated class Pipe {
 }
 
 isolated function newPipe(int 'limit) returns handle = @java:Constructor {
-    'class: "org.nuvindu.pipe.Pipe"
+    'class: "Pipe"
 } external;
 
 isolated function newPipeWithTimer(int 'limit, Timer timer) returns handle = @java:Constructor {
-    'class: "org.nuvindu.pipe.Pipe"
+    'class: "Pipe"
 } external;
 
 isolated function immediateClose(handle pipe) returns Error? = @java:Method {
-    'class: "org.nuvindu.pipe.Pipe"
+    'class: "Pipe"
 } external;
 
 isolated function isClosed(handle pipe) returns boolean = @java:Method {
-    'class: "org.nuvindu.pipe.Pipe"
+    'class: "Pipe"
 } external;

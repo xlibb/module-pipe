@@ -1,5 +1,5 @@
 import ballerina/http;
-import nuvindu/pipe;
+import xlibb/pipe;
 
 service / on new http:Listener(9090) {
     pipe:Pipe pipe;

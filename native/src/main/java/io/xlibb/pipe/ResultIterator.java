@@ -14,18 +14,18 @@
 // specific language governing permissions and limitations
 // under the License.
 
-package org.nuvindu.pipe;
+package io.xlibb.pipe;
 
 import io.ballerina.runtime.api.Environment;
 import io.ballerina.runtime.api.Future;
 import io.ballerina.runtime.api.values.BDecimal;
 import io.ballerina.runtime.api.values.BError;
 import io.ballerina.runtime.api.values.BObject;
-import org.nuvindu.pipe.observer.Callback;
+import io.xlibb.pipe.observer.Callback;
 
-import static org.nuvindu.pipe.utils.Utils.NATIVE_PIPE;
-import static org.nuvindu.pipe.utils.Utils.TIME_OUT;
-import static org.nuvindu.pipe.utils.Utils.createError;
+import static io.xlibb.pipe.utils.Utils.NATIVE_PIPE;
+import static io.xlibb.pipe.utils.Utils.TIME_OUT;
+import static io.xlibb.pipe.utils.Utils.createError;
 
 /**
  * Java implementation for the APIs of the stream returned from the pipe.

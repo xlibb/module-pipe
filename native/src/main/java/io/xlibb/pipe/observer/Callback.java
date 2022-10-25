@@ -1,4 +1,4 @@
-package org.nuvindu.pipe.observer;
+package io.xlibb.pipe.observer;
 
 import io.ballerina.runtime.api.Future;
 import io.ballerina.runtime.api.values.BError;

@@ -11,7 +11,7 @@ The pipe allows you to send events from one place to another. The pipe can hold 
 A `pipe:Pipe` instance can be created as follows. It will be used as a channel to produce and consume events. Each `pipe:Pipe` has a limit indicating the number of entries it can hold at one time.
 
 ```ballerina
-import nuvindu/pipe;
+import xlibb/pipe;
 
 public function main() returns error? {
     pipe:Pipe pipe = new('limit = 10);
@@ -34,7 +34,7 @@ Events can be produced to the pipe using the following method. It allows `any` t
 When the pipe is blocked, there is a waiting period to keep the event in the buffer. The waiting period has to be manually set using the `timeout` parameter and it is in `SECONDS`. After the timeout, the pipe will return a `pipe:Error` stating that the operation has timed out.
 
 ```ballerina
-import nuvindu/pipe;
+import xlibb/pipe;
 
 public function main() returns error? {
     pipe:Pipe pipe = new('limit = 10);
@@ -52,7 +52,7 @@ If there is no event available in the pipe, it will wait until the `timeout` ela
 
 ```ballerina
 import ballerina/io;
-import nuvindu/pipe;
+import xlibb/pipe;
 
 public function main() returns error? {
     pipe:Pipe pipe = new('limit = 10);
@@ -73,7 +73,7 @@ specify the maximum waiting period to consume events.
 
 ```ballerina
 import ballerina/io;
-import nuvindu/pipe;
+import xlibb/pipe;
 
 public function main() returns error? {
     pipe:Pipe pipe = new('limit = 10);
@@ -102,7 +102,7 @@ After that period, all the events are removed and the pipe instance is taken by 
 ```ballerina
 import ballerina/io;
 import ballerina/lang.runtime;
-import nuvindu/pipe;
+import xlibb/pipe;
 
 public function main() returns error? {
     pipe:Pipe pipe = new(5);
@@ -128,7 +128,7 @@ public function main() returns error? {
 This method will immediately close the pipe neglecting the graceful approach. If the pipe is successfully closed it will return `()`. Otherwise, it will return `pipe:Error`. Unexpected errors may occur.
 
 ```ballerina
-import nuvindu/pipe;
+import xlibb/pipe;
 
 public function main() returns error? {
     pipe:Pipe pipe = new('limit = 10);
@@ -144,7 +144,7 @@ This method will return a boolean value indicating whether the pipe is closed or
 
 ```ballerina
 import ballerina/io;
-import nuvindu/pipe;
+import xlibb/pipe;
 
 public function main() returns error? {
     pipe:Pipe pipe = new('limit = 10);

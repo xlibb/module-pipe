@@ -14,7 +14,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-package org.nuvindu.pipe;
+package io.xlibb.pipe;
 
 import io.ballerina.runtime.api.Environment;
 import io.ballerina.runtime.api.Future;
@@ -28,9 +28,9 @@ import io.ballerina.runtime.api.values.BHandle;
 import io.ballerina.runtime.api.values.BObject;
 import io.ballerina.runtime.api.values.BStream;
 import io.ballerina.runtime.api.values.BTypedesc;
-import org.nuvindu.pipe.observer.Callback;
-import org.nuvindu.pipe.observer.Notifier;
-import org.nuvindu.pipe.observer.Observable;
+import io.xlibb.pipe.observer.Callback;
+import io.xlibb.pipe.observer.Notifier;
+import io.xlibb.pipe.observer.Observable;
 
 import java.util.Timer;
 import java.util.TimerTask;
@@ -38,15 +38,15 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.nuvindu.pipe.utils.ModuleUtils.getModule;
-import static org.nuvindu.pipe.utils.Utils.NATIVE_PIPE;
-import static org.nuvindu.pipe.utils.Utils.NATIVE_PIPE_OBJECT;
-import static org.nuvindu.pipe.utils.Utils.NATIVE_TIMER_OBJECT;
-import static org.nuvindu.pipe.utils.Utils.RESULT_ITERATOR;
-import static org.nuvindu.pipe.utils.Utils.STREAM_GENERATOR;
-import static org.nuvindu.pipe.utils.Utils.TIMER;
-import static org.nuvindu.pipe.utils.Utils.TIME_OUT;
-import static org.nuvindu.pipe.utils.Utils.createError;
+import static io.xlibb.pipe.utils.ModuleUtils.getModule;
+import static io.xlibb.pipe.utils.Utils.NATIVE_PIPE;
+import static io.xlibb.pipe.utils.Utils.NATIVE_PIPE_OBJECT;
+import static io.xlibb.pipe.utils.Utils.NATIVE_TIMER_OBJECT;
+import static io.xlibb.pipe.utils.Utils.RESULT_ITERATOR;
+import static io.xlibb.pipe.utils.Utils.STREAM_GENERATOR;
+import static io.xlibb.pipe.utils.Utils.TIMER;
+import static io.xlibb.pipe.utils.Utils.TIME_OUT;
+import static io.xlibb.pipe.utils.Utils.createError;
 
 /**
  * Provide APIs to exchange events concurrently.
