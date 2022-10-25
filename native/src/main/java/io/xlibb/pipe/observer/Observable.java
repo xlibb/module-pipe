@@ -45,13 +45,6 @@ public class Observable implements IObservable {
     }
 
     @Override
-    public void notifyObservers(BError bError) {
-        if (!callbackList.isEmpty()) {
-            callbackList.remove(0).onTimeout(bError);
-        }
-    }
-
-    @Override
     public void notifyObservers(BError bError, Callback callback) {
         callback.onTimeout(bError);
     }

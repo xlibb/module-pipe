@@ -23,7 +23,7 @@ public isolated class Pipe {
     # Creates a new `pipe:Pipe` instance.
     #
     # + 'limit - The maximum number of entries that are held in the pipe at once
-    # + timer - The timer that used to keep track of time to notify the timeouts in APIs 
+    # + timer - The timer that used to keep track of time to notify the timeouts in APIs
     public isolated function init(int 'limit, Timer? timer = ()) {
         if timer is Timer {
             self.nativePipeObject = newPipeWithTimer('limit, timer);
@@ -38,30 +38,30 @@ public isolated class Pipe {
     # + timeout - The maximum waiting period that holds events
     # + return - Returns `()` if events is successfully produced. Otherwise returns a `pipe:Error`
     public isolated function produce(any events, decimal timeout) returns Error? = @java:Method {
-        'class: "Pipe"
+        'class: "io.xlibb.pipe.Pipe"
     } external;
 
     # Consumes events in the pipe.
     #
     # + timeout - The maximum waiting period to consume events
-    # + typeParam - The `type` of data that is needed to be consumed. When not provided, the type is inferred 
+    # + typeParam - The `type` of data that is needed to be consumed. When not provided, the type is inferred
     # using the expected type from the function
     # + return - Return type is inferred from the user specified type. That should be the same event type
     # produced to the pipe. Otherwise, returns a `pipe:Error`
     public isolated function consume(decimal timeout, typedesc<any> typeParam = <>)
         returns typeParam|Error = @java:Method {
-        'class: "Pipe"
+        'class: "io.xlibb.pipe.Pipe"
     } external;
 
     # Consumes events in the pipe as a `stream`
     #
     # + timeout - The maximum waiting period to consume events
-    # + typeParam - The `type` of data that is needed to be consumed. When not provided, the type is inferred 
+    # + typeParam - The `type` of data that is needed to be consumed. When not provided, the type is inferred
     # using the expected type from the function
     # + return - Returns a `stream`. The stream type is inferred from the user specified type
     public isolated function consumeStream(decimal timeout, typedesc<any> typeParam = <>)
         returns stream<typeParam, error?> = @java:Method {
-        'class: "Pipe"
+        'class: "io.xlibb.pipe.Pipe"
     } external;
 
     # Closes the pipe instantly.
@@ -77,7 +77,7 @@ public isolated class Pipe {
     # + timeout - The maximum grace period to wait until the pipe is empty
     # + return - Return `()`, if the pipe is successfully closed. Otherwise returns a `pipe:Error`
     public isolated function gracefulClose(decimal timeout = 30) returns Error? = @java:Method {
-        'class: "Pipe"
+        'class: "io.xlibb.pipe.Pipe"
     } external;
 
     # Checks whether the pipe is closed.
@@ -91,17 +91,17 @@ public isolated class Pipe {
 }
 
 isolated function newPipe(int 'limit) returns handle = @java:Constructor {
-    'class: "Pipe"
+    'class: "io.xlibb.pipe.Pipe"
 } external;
 
 isolated function newPipeWithTimer(int 'limit, Timer timer) returns handle = @java:Constructor {
-    'class: "Pipe"
+    'class: "io.xlibb.pipe.Pipe"
 } external;
 
 isolated function immediateClose(handle pipe) returns Error? = @java:Method {
-    'class: "Pipe"
+    'class: "io.xlibb.pipe.Pipe"
 } external;
 
 isolated function isClosed(handle pipe) returns boolean = @java:Method {
-    'class: "Pipe"
+    'class: "io.xlibb.pipe.Pipe"
 } external;

@@ -4,8 +4,6 @@ import io.xlibb.pipe.utils.Utils;
 
 import java.util.TimerTask;
 
-import static io.xlibb.pipe.utils.Utils.createError;
-
 /**
  * Observable class for the observers waiting for the timeKeeper.
  */

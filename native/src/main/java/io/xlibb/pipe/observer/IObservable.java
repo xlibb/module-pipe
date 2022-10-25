@@ -10,7 +10,6 @@ public interface IObservable {
     public void unregisterObserver(Callback o);
     public void notifyObservers(Object object);
     public void notifyObservers();
-    public void notifyObservers(BError bError);
     public void notifyObservers(BError bError, Callback callback);
     public void notifyObservers(boolean isEmpty);
 }
