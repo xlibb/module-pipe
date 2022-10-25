@@ -7,7 +7,7 @@
 
 This library provides a medium to send and receive events simultaneously. And it includes APIs to produce, consume and return events via a stream.
 
-**Note:** This library is originally developed by @Nuvindu and it is then moved to the xlibb organization.
+**Note:** This library is originally developed by [@Nuvindu](https://github.com/Nuvindu). Later, it is moved to the xlibb organization.
 
 ## Pipe
 
