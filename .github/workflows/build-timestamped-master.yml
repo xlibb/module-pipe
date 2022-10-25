@@ -14,7 +14,7 @@ on:
 jobs:
     build:
         runs-on: ubuntu-latest
-        if: github.repository_owner == 'Nuvindu'
+        if: github.repository_owner == 'xlibb'
         steps:
             -   name: Checkout Repository
                 uses: actions/checkout@v2
