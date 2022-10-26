@@ -99,7 +99,7 @@ public class Pipe implements IPipe {
 
     protected void asyncConsume(Callback callback, BDecimal timeout) {
         if (this.queue == null) {
-            callback.onError(createError("No events available in the pipe."));
+            callback.onSuccess(null);
         } else if (this.queueSize.get() == 0) {
             this.emptyQueue.notifyObservers(true);
             this.producer.registerObserver(callback);
