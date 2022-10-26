@@ -35,7 +35,7 @@ public class Callback implements IObserver {
         if (atomicUpdate.compareAndSet(false, true)) {
             observable.unregisterObserver(this);
             timeKeeper.unregisterObserver(this);
-            future.complete(bError);
+            onError(bError);
         }
     }
 

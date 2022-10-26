@@ -75,10 +75,23 @@ function testImmediateClose() returns error? {
     Pipe pipe = new(5);
     check pipe.produce("1", timeout = 5);
     check pipe.immediateClose();
-    string expectedValue = "No events available in the pipe.";
-    string|Error actualValue = pipe.consume(5);
-    test:assertTrue(actualValue is Error);
-    test:assertEquals((<Error>actualValue).message(), expectedValue);
+    Error? actualValue = pipe.consume(5);
+    test:assertTrue(actualValue is ());
+}
+
+@test:Config {
+    groups: ["close", "main_apis", "test"]
+}
+function testConsumeStreamAfterClose() returns error? {
+    Pipe pipe = new(5);
+    foreach int i in 0..<5 {
+        check pipe.produce(i, 5);
+    }
+    stream<int, error?> result = pipe.consumeStream(5);
+    check pipe.immediateClose();
+    var actualValue = check result.next();
+    var expectedValue = { value: ()};
+    test:assertEquals(actualValue, expectedValue);
 }
 
 @test:Config {
@@ -92,6 +105,8 @@ function testGracefulClose() returns error? {
     Error? actualValue = pipe.produce("1", timeout = 5);
     test:assertTrue(actualValue is Error);
     test:assertEquals((<Error>actualValue).message(), expectedValue);
+    Error? consumeValue = pipe.consume(5);
+    test:assertTrue(consumeValue is ());
 }
 
 @test:Config {
