@@ -5,6 +5,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## Unreleased
 
+## [1.1.2] - 2022-10-27
+
+## Fixed
+- [[#13] Update API Docs to Reflect Organization Change](https://github.com/xlibb/module-pipe/issues/13)
+
 ## [1.1.1] - 2022-10-27
 
 ### Fixed
