@@ -5,8 +5,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## Unreleased
 
+### Fixed
+- [[#8] Fix `next()` Method of the Stream Does Not Return Nil When the Pipe is Closed](https://github.com/xlibb/module-pipe/issues/8)
+
 ## [1.1.0] - 2022-10-26
 
 ### Changed
-- [[#4](The Stream Returning from the `consumeStream` API Returns Nil When the Pipe is Closed)](https://github.com/xlibb/module-pipe/issues/4)
+- [[#4] The Stream Returning from the `consumeStream` API Returns Nil When the Pipe is Closed](https://github.com/xlibb/module-pipe/issues/4)
 - Moved to the xlibb organization in Ballerina central. Version 1 was released in the `nuvindu` organization in Ballerina central.

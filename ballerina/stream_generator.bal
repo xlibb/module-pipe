@@ -25,7 +25,7 @@ class StreamGenerator {
 
     public isolated function next() returns record {|any value;|}|Error? {
         any streamValue = check self.resultIterator.nextValue(self);
-        return {value: streamValue};
+        return streamValue is () ? () : {value: streamValue};
     }
 
     public isolated function close() returns Error? {
