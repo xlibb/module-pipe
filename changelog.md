@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## Unreleased
 
+## [1.1.1] - 2022-10-27
+
 ### Fixed
 - [[#8] Fix `next()` Method of the Stream Does Not Return Nil When the Pipe is Closed](https://github.com/xlibb/module-pipe/issues/8)
 
