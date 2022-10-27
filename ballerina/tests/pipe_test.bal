@@ -40,7 +40,7 @@ function testPipeWithRecords() returns error? {
     record {|MovieRecord value;|}? 'record = check 'stream.next();
     MovieRecord actualValue = (<record {|MovieRecord value;|}>'record).value;
     MovieRecord expectedValue = movieRecord;
-    test:assertEquals(expectedValue, actualValue);
+    test:assertEquals(actualValue, expectedValue);
 }
 
 @test:Config {
@@ -55,7 +55,7 @@ function testPipeStream() returns error? {
         string expectedValue = i.toString();
         record {|string value;|}? data = check 'stream.next();
         string actualValue = (<record {|string value;|}>data).value;
-        test:assertEquals(expectedValue, actualValue);
+        test:assertEquals(actualValue, expectedValue);
     }
     check 'stream.close();
     string expectedValue = "Events cannot be produced to a closed pipe.";
@@ -80,7 +80,7 @@ function testImmediateClose() returns error? {
 }
 
 @test:Config {
-    groups: ["close", "main_apis", "test"]
+    groups: ["close", "main_apis"]
 }
 function testConsumeStreamAfterClose() returns error? {
     Pipe pipe = new(5);
@@ -90,8 +90,7 @@ function testConsumeStreamAfterClose() returns error? {
     stream<int, error?> result = pipe.consumeStream(5);
     check pipe.immediateClose();
     var actualValue = check result.next();
-    var expectedValue = { value: ()};
-    test:assertEquals(actualValue, expectedValue);
+    test:assertEquals(actualValue, ());
 }
 
 @test:Config {
