@@ -20,12 +20,12 @@ public function main() returns error? {
 
 ### APIs associated with Pipe
 
-- <b> produce </b>: Produces events into the pipe. If the pipe is full, it blocks further producing events.
-- <b> consume </b>: Consumes events in the pipe. If the pipe is empty, it blocks until events are available in the pipe.
-- <b> consumeStream </b>: Returns a stream. Events can be consumed by iterating the stream.
-- <b> immediateClose </b>: Closes the pipe instantly. All the events in the pipe will be discarded.
-- <b> gracefulClose </b>: Closes the pipe gracefully. A grace period is provided to consume available events in the pipe. After the period, all the events will be discarded.
-- <b> isClosed </b>: Returns the closing status of the pipe.
+- **produce**: Produces events into the pipe. If the pipe is full, it blocks further producing events.
+- **consume**: Consumes events in the pipe. If the pipe is empty, it blocks until events are available in the pipe.
+- **consumeStream**: Returns a stream. Events can be consumed by iterating the stream.
+- **immediateClose**: Closes the pipe instantly. All the events in the pipe will be discarded.
+- **gracefulClose**: Closes the pipe gracefully. A grace period is provided to consume available events in the pipe. After the period, all the events will be discarded.
+- **isClosed**: Returns the closing status of the pipe.
 
 #### Produce Events
 
@@ -68,8 +68,7 @@ public function main() returns error? {
 
 Using the following method, events in the pipe can be consumed via a stream. The stream type is inferred using the expected type from the function. If the return type cannot be cast into the expected type it will return a `TypeCast Error`.
 
-The `consume` method is used here as an underlying method. Therefore a `timeout` needs to be set to
-specify the maximum waiting period to consume events.
+The `consume` method is used here as an underlying method. Therefore a `timeout` needs to be set to specify the maximum waiting period to consume events.
 
 ```ballerina
 import ballerina/io;
@@ -80,7 +79,7 @@ public function main() returns error? {
     string event = "event";
     check pipe.produce(event, timeout = 5);
 
-    stream<string, error?> eventStream = pipe.consumeStream(timeout = 5.12323);
+    stream<string, error?> eventStream = check pipe.consumeStream(timeout = 5.12323);
     record {|string value;|}? nextEvent = check eventStream.next();
     if nextEvent != () {
         string consumedEvent = nextEvent.value;

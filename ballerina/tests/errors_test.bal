@@ -22,7 +22,7 @@ import ballerina/time;
 }
 function testPipeWithNullValues() returns error? {
     Pipe pipe = new(1);
-    string expectedValue = "Nil values cannot be produced to a pipe.";
+    string expectedValue = "Nil values cannot be produced to a pipe";
     Error? result = pipe.produce((), timeout = 5);
     test:assertTrue(result is Error);
     string actualValue = (<error>result).message();
@@ -34,7 +34,7 @@ function testPipeWithNullValues() returns error? {
 }
 function testTimeoutErrorsInProduce() returns error? {
     Pipe pipe = new (1);
-    string expectedValue = "Operation has timed out.";
+    string expectedValue = "Operation has timed out";
     check pipe.produce("data1", timeout = 1);
     Error? result = pipe.produce("data2", timeout = 1);
     test:assertTrue(result is Error);
@@ -47,7 +47,7 @@ function testTimeoutErrorsInProduce() returns error? {
 }
 function testTimeoutErrorsInConsume() returns error? {
     Pipe pipe = new (1);
-    string expectedValue = "Operation has timed out.";
+    string expectedValue = "Operation has timed out";
     string|Error result = pipe.consume(timeout = 1);
     test:assertTrue(result is Error);
     string actualValue = (<error>result).message();
@@ -59,7 +59,7 @@ function testTimeoutErrorsInConsume() returns error? {
 }
 function testImmediateClosingOfClosedPipe() returns error? {
     Pipe pipe = new (1);
-    string expectedValue = "Closing of a closed pipe is not allowed.";
+    string expectedValue = "Closing of a closed pipe is not allowed";
     check pipe.immediateClose();
     Error? immediateCloseResult = pipe.immediateClose();
     test:assertTrue(immediateCloseResult is Error);
@@ -72,7 +72,7 @@ function testImmediateClosingOfClosedPipe() returns error? {
 }
 function testGracefulClosingOfClosedPipe() returns error? {
     Pipe pipe = new (1);
-    string expectedValue = "Closing of a closed pipe is not allowed.";
+    string expectedValue = "Closing of a closed pipe is not allowed";
     time:Utc currentUtc = time:utcNow();
     check pipe.gracefulClose();
     Error? gracefulCloseResult = pipe.gracefulClose();
@@ -88,9 +88,9 @@ function testGracefulClosingOfClosedPipe() returns error? {
 }
 function testClosingOfClosedStreamInPipe() returns error? {
     Pipe pipe = new (1);
-    string expectedValue = "Failed to close the stream.";
+    string expectedValue = "Failed to close the stream";
     check pipe.produce("data", timeout = 1);
-    stream<string, error?> resultStream = pipe.consumeStream(5);
+    stream<string, error?> resultStream = check pipe.consumeStream(5);
     check resultStream.close();
     error? close = resultStream.close();
     test:assertTrue(close is error);
@@ -106,9 +106,9 @@ function testErrorsInPipesWithTimer() returns error? {
     Pipe timerPipe = new (1, timeKeeper);
     Pipe timerPipe2 = new (1, timeKeeper);
     Pipe timerPipe3 = new(5, timeKeeper);
-    string expectedError = "Operation has timed out.";
+    string expectedError = "Operation has timed out";
 
-    worker A {       
+    worker A {
         Error? produce = timerPipe.produce("data1", timeout = 1);
         test:assertTrue(produce !is Error);
         Error? result1 = timerPipe.produce("data2", timeout = 1);
@@ -132,4 +132,50 @@ function testErrorsInPipesWithTimer() returns error? {
         test:assertTrue(actualValue3 is Error);
         test:assertEquals(actualValue3, expectedValue);
     }
+}
+
+@test:Config {
+    groups: ["main_apis"]
+}
+isolated function testNegativeTimeout() returns error? {
+    Pipe pipe = new(1);
+    Error? produceResult = pipe.produce(1, -10);
+    if produceResult is Error {
+        string expectedMessage = "Invalid produce timeout value provided";
+        string expectedCause = "Timeout cannot be less than -1. Provided: -10";
+        validateTimeoutErrorCause(produceResult, expectedMessage, expectedCause);
+    } else {
+        test:assertFail("Expected an error");
+    }
+    int|error consumeResult = pipe.consume(-10);
+    if consumeResult is Error {
+        string expectedMessage = "Invalid consume timeout value provided";
+        string expectedCause = "Timeout cannot be less than -1. Provided: -10";
+        validateTimeoutErrorCause(consumeResult, expectedMessage, expectedCause);
+    } else {
+        test:assertFail("Expected an error");
+    }
+    stream<int, error?>|Error consumeStreamResult = pipe.consumeStream(-10);
+    if consumeStreamResult is Error {
+        string expectedMessage = "Invalid consume timeout value provided";
+        string expectedCause = "Timeout cannot be less than -1. Provided: -10";
+        validateTimeoutErrorCause(consumeStreamResult, expectedMessage, expectedCause);
+    } else {
+        test:assertFail("Expected an error");
+    }
+    Error? closeResult = pipe.gracefulClose(-10);
+    if closeResult is Error {
+        string expectedMessage = "Invalid graceful timeout value provided";
+        string expectedCause = "Timeout cannot be less than -1. Provided: -10";
+        validateTimeoutErrorCause(closeResult, expectedMessage, expectedCause);
+    } else {
+        test:assertFail("Expected an error");
+    }
+}
+
+isolated function validateTimeoutErrorCause(Error err, string expectedMessage, string expectedCause) {
+    test:assertEquals(err.message(), expectedMessage);
+    test:assertTrue(err.cause() is Error, "Expected to have a cause");
+    Error cause = <Error> err.cause();
+    test:assertEquals(cause.message(), expectedCause);
 }

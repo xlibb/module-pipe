@@ -26,12 +26,12 @@ import io.ballerina.runtime.api.values.BDecimal;
 import io.ballerina.runtime.api.values.BError;
 import io.ballerina.runtime.api.values.BHandle;
 import io.ballerina.runtime.api.values.BObject;
-import io.ballerina.runtime.api.values.BStream;
 import io.ballerina.runtime.api.values.BTypedesc;
 import io.xlibb.pipe.observer.Callback;
 import io.xlibb.pipe.observer.Notifier;
 import io.xlibb.pipe.observer.Observable;
 
+import java.math.BigDecimal;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -52,6 +52,9 @@ import static io.xlibb.pipe.utils.Utils.createError;
  * Provide APIs to exchange events concurrently.
  */
 public class Pipe implements IPipe {
+
+    private static final long INFINITE_WAIT = -1;
+    private static final BDecimal MILLISECONDS_FACTOR = ValueCreator.createDecimalValue(new BigDecimal(1000));
     private ConcurrentLinkedQueue<Object> queue;
     private final AtomicInteger queueSize;
     private final Long limit;
@@ -78,17 +81,15 @@ public class Pipe implements IPipe {
         this.timeKeeper = new Observable(null, null);
     }
 
-    protected void asyncProduce(Callback callback, Object event, BDecimal timeout) {
+    protected void asyncProduce(Callback callback, Object event, long timeout) {
         if (event == null) {
-            callback.onError(createError("Nil values cannot be produced to a pipe."));
+            callback.onError(createError("Nil values cannot be produced to a pipe"));
         } else if (this.isClosed.get()) {
-            callback.onError(createError("Events cannot be produced to a closed pipe."));
+            callback.onError(createError("Events cannot be produced to a closed pipe"));
         } else if (this.queueSize.get() == this.limit) {
             callback.setEvent(event);
-            this.timeKeeper.registerObserver(callback);
             this.consumer.registerObserver(callback);
-            Notifier notifier = new Notifier(this.timeKeeper, callback);
-            this.timer.schedule(notifier, (long) timeout.floatValue() * 1000);
+            this.scheduleAction(callback, timeout);
         } else {
             queue.add(event);
             queueSize.incrementAndGet();
@@ -97,15 +98,13 @@ public class Pipe implements IPipe {
         }
     }
 
-    protected void asyncConsume(Callback callback, BDecimal timeout) {
+    protected void asyncConsume(Callback callback, long timeout) {
         if (this.queue == null) {
             callback.onSuccess(null);
         } else if (this.queueSize.get() == 0) {
             this.emptyQueue.notifyObservers(true);
             this.producer.registerObserver(callback);
-            this.timeKeeper.registerObserver(callback);
-            Notifier notifier = new Notifier(this.timeKeeper, callback);
-            this.timer.schedule(notifier, (long) timeout.floatValue() * 1000);
+            this.scheduleAction(callback, timeout);
         } else {
             queueSize.decrementAndGet();
             callback.onSuccess(queue.remove());
@@ -121,17 +120,20 @@ public class Pipe implements IPipe {
     @Override
     public BError immediateClose() {
         if (this.isClosed.get()) {
-            return createError("Closing of a closed pipe is not allowed.");
+            return createError("Closing of a closed pipe is not allowed");
         }
         this.isClosed.compareAndSet(false, true);
         this.queue = null;
         return null;
     }
 
-    protected void asyncClose(Callback callback, BDecimal timeout) {
+    protected void asyncClose(Callback callback, long timeout) {
         if (this.isClosed.get()) {
-            callback.onError(createError("Closing of a closed pipe is not allowed."));
+            callback.onError(createError("Closing of a closed pipe is not allowed"));
         } else {
+            if (timeout == -1) {
+                callback.onError(createError("Graceful close must provide 0 or greater timeout"));
+            }
             this.isClosed.compareAndSet(false, true);
             if (this.queueSize.get() != 0) {
                 emptyQueue.registerObserver(callback);
@@ -142,7 +144,7 @@ public class Pipe implements IPipe {
                         emptyQueue.unregisterObserver(callback);
                         callback.onSuccess(null);
                     }
-                }, (long) timeout.floatValue() * 1000);
+                }, timeout);
             } else {
                 this.queue = null;
                 callback.onSuccess(null);
@@ -150,44 +152,87 @@ public class Pipe implements IPipe {
         }
     }
 
-    public static BStream consumeStream(BObject pipe, BDecimal timeout, BTypedesc typeParam) {
+    public static Object consumeStream(BObject pipe, BDecimal timeout, BTypedesc typeParam) {
+        long timeoutInMillis;
+        try {
+            timeoutInMillis = getTimeoutInMillis(timeout);
+        } catch (BError bError) {
+            return createError("Invalid consume timeout value provided", bError);
+        }
         UnionType typeUnion = TypeCreator.createUnionType(PredefinedTypes.TYPE_NULL, PredefinedTypes.TYPE_ERROR);
         BObject resultIterator = ValueCreator.createObjectValue(getModule(), RESULT_ITERATOR);
         BObject streamGenerator = ValueCreator.createObjectValue(getModule(), STREAM_GENERATOR, resultIterator);
         BHandle handle = (BHandle) pipe.get(NATIVE_PIPE_OBJECT);
         streamGenerator.addNativeData(NATIVE_PIPE, handle.getValue());
-        streamGenerator.addNativeData(TIME_OUT, timeout);
+        streamGenerator.addNativeData(TIME_OUT, timeoutInMillis);
         return ValueCreator.createStreamValue(TypeCreator.createStreamType(typeParam.getDescribingType(), typeUnion),
                                               streamGenerator);
     }
 
     public static BError produce(Environment env, BObject pipe, Object event, BDecimal timeout) {
+        long timeoutInMillis;
+        try {
+            timeoutInMillis = getTimeoutInMillis(timeout);
+        } catch (BError bError) {
+            return createError("Invalid produce timeout value provided", bError);
+        }
         BHandle handle = (BHandle) pipe.get(NATIVE_PIPE_OBJECT);
         Pipe nativePipe = (Pipe) handle.getValue();
         Future future = env.markAsync();
         Callback observer = new Callback(future, nativePipe.getConsumer(), nativePipe.getTimeKeeper(),
                                          nativePipe.getProducer());
-        nativePipe.asyncProduce(observer, event, timeout);
+        nativePipe.asyncProduce(observer, event, timeoutInMillis);
         return null;
     }
 
     public static Object consume(Environment env, BObject pipe, BDecimal timeout, BTypedesc typeParam) {
+        long timeoutInMillis;
+        try {
+            timeoutInMillis = getTimeoutInMillis(timeout);
+        } catch (BError bError) {
+            return createError("Invalid consume timeout value provided", bError);
+        }
         BHandle handle = (BHandle) pipe.get(NATIVE_PIPE_OBJECT);
         Pipe nativePipe = (Pipe) handle.getValue();
         Future future = env.markAsync();
         Callback observer = new Callback(future, nativePipe.getProducer(), nativePipe.getTimeKeeper(),
                                          nativePipe.getConsumer());
-        nativePipe.asyncConsume(observer, timeout);
+        nativePipe.asyncConsume(observer, timeoutInMillis);
         return null;
     }
 
     public static BError gracefulClose(Environment env, BObject pipe, BDecimal timeout) {
+        long timeoutInMillis;
+        try {
+            timeoutInMillis = getTimeoutInMillis(timeout);
+        } catch (BError bError) {
+            return createError("Invalid graceful timeout value provided", bError);
+        }
         BHandle handle = (BHandle) pipe.get(NATIVE_PIPE_OBJECT);
         Pipe nativePipe = (Pipe) handle.getValue();
         Future future = env.markAsync();
         Callback observer = new Callback(future, null, null, null);
-        nativePipe.asyncClose(observer, timeout);
+        nativePipe.asyncClose(observer, timeoutInMillis);
         return null;
+    }
+
+    private static long getTimeoutInMillis(BDecimal timeout) {
+        if (timeout.floatValue() == -1) {
+            return INFINITE_WAIT;
+        } else if (timeout.floatValue() < 0) {
+            throw createError("Timeout cannot be less than -1. Provided: " + timeout);
+        }
+        BDecimal timeoutInMillis = timeout.multiply(MILLISECONDS_FACTOR);
+        return Double.valueOf(timeoutInMillis.floatValue()).longValue();
+    }
+
+    private void scheduleAction(Callback callback, long timeout) {
+        if (timeout == INFINITE_WAIT) {
+            return;
+        }
+        this.timeKeeper.registerObserver(callback);
+        Notifier notifier = new Notifier(this.timeKeeper, callback);
+        this.timer.schedule(notifier, timeout);
     }
 
     protected Observable getProducer() {

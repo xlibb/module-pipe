@@ -36,7 +36,7 @@ function testPipeWithRecords() returns error? {
     Pipe pipe = new(5);
     MovieRecord movieRecord = {name: "The Trial of the Chicago 7", director: "Aaron Sorkin"};
     check pipe.produce(movieRecord, timeout = 5);
-    stream<MovieRecord, error?> 'stream = pipe.consumeStream(5);
+    stream<MovieRecord, error?> 'stream = check pipe.consumeStream(5);
     record {|MovieRecord value;|}? 'record = check 'stream.next();
     MovieRecord actualValue = (<record {|MovieRecord value;|}>'record).value;
     MovieRecord expectedValue = movieRecord;
@@ -50,7 +50,7 @@ function testPipeStream() returns error? {
     Pipe pipe = new(5);
     check pipe.produce("1", timeout = 5);
     check pipe.produce("2", timeout = 5);
-    stream<string, error?> 'stream = pipe.consumeStream(timeout = 5);
+    stream<string, error?> 'stream = check pipe.consumeStream(timeout = 5);
     foreach int i in 1 ..< 3 {
         string expectedValue = i.toString();
         record {|string value;|}? data = check 'stream.next();
@@ -58,7 +58,7 @@ function testPipeStream() returns error? {
         test:assertEquals(actualValue, expectedValue);
     }
     check 'stream.close();
-    string expectedValue = "Events cannot be produced to a closed pipe.";
+    string expectedValue = "Events cannot be produced to a closed pipe";
     Error? actualValue = pipe.produce("1", timeout = 5);
     test:assertTrue(actualValue is Error);
     test:assertEquals((<Error>actualValue).message(), expectedValue);
@@ -87,7 +87,7 @@ function testConsumeStreamAfterClose() returns error? {
     foreach int i in 0..<5 {
         check pipe.produce(i, 5);
     }
-    stream<int, error?> result = pipe.consumeStream(5);
+    stream<int, error?> result = check pipe.consumeStream(5);
     check pipe.immediateClose();
     var actualValue = check result.next();
     test:assertEquals(actualValue, ());
@@ -100,7 +100,7 @@ function testGracefulClose() returns error? {
     Pipe pipe = new(5);
     check pipe.produce("1", timeout = 5);
     check pipe.gracefulClose(timeout = 5);
-    string expectedValue = "Events cannot be produced to a closed pipe.";
+    string expectedValue = "Events cannot be produced to a closed pipe";
     Error? actualValue = pipe.produce("1", timeout = 5);
     test:assertTrue(actualValue is Error);
     test:assertEquals((<Error>actualValue).message(), expectedValue);
@@ -140,7 +140,7 @@ function testWaitingInGracefulClose() returns error? {
         test:assertTrue(actualValue !is Error);
         test:assertEquals(actualValue, expectedValue);
 
-        string expectedErrorMessage = "Operation has timed out.";
+        string expectedErrorMessage = "Operation has timed out";
         test:assertTrue(actualError is Error);
         string actualErrorMessage = (<error>actualError).message();
         test:assertEquals(actualErrorMessage, expectedErrorMessage);

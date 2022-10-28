@@ -35,7 +35,8 @@ public isolated class Pipe {
     # Produces an event into the pipe.
     #
     # + event - The event that needs to be produced to the pipe. Can be `any` type
-    # + timeout - The maximum waiting period that holds the event
+    # + timeout - The maximum waiting period that holds the event. Set the timeout to `-1` to wait without a time limit.
+    #             Any other negative value will return a `pipe:Error`
     # + return - Returns `()` if the event is successfully produced. Otherwise returns a `pipe:Error`
     public isolated function produce(any event, decimal timeout) returns Error? = @java:Method {
         'class: "io.xlibb.pipe.Pipe"
@@ -43,7 +44,8 @@ public isolated class Pipe {
 
     # Consumes an event in the pipe.
     #
-    # + timeout - The maximum waiting period to consume the event
+    # + timeout - The maximum waiting period to consume the event. Set the timeout to `-1` to wait without a time limit.
+    #             Any other negative value will return a `pipe:Error`
     # + typeParam - The `type` of data that is needed to be consumed. When not provided, the type is inferred
     # using the expected type from the function
     # + return - Return type is inferred from the user specified type. That should be the same event type
@@ -55,12 +57,13 @@ public isolated class Pipe {
 
     # Consumes events in the pipe as a `stream`
     #
-    # + timeout - The maximum waiting period to consume events
+    # + timeout - The maximum waiting period to consume events. Set the timeout to `-1` to wait without a time limit.
+    #             Any other negative value will return a `pipe:Error`
     # + typeParam - The `type` of data that is needed to be consumed. When not provided, the type is inferred
     # using the expected type from the function
     # + return - Returns a `stream`. The stream type is inferred from the user specified type
     public isolated function consumeStream(decimal timeout, typedesc<any> typeParam = <>)
-        returns stream<typeParam, error?> = @java:Method {
+        returns stream<typeParam, error?>|Error = @java:Method {
         'class: "io.xlibb.pipe.Pipe"
     } external;
 
@@ -74,7 +77,8 @@ public isolated class Pipe {
 
     # Closes the pipe gracefully. Waits for some grace period until all the events in the pipe is consumed.
     #
-    # + timeout - The maximum grace period to wait until the pipe is empty
+    # + timeout - The maximum grace period to wait until the pipe is empty. Setting the timeout to a negative value will
+    #             return a `pipe:Error`
     # + return - Return `()`, if the pipe is successfully closed. Otherwise returns a `pipe:Error`
     public isolated function gracefulClose(decimal timeout = 30) returns Error? = @java:Method {
         'class: "io.xlibb.pipe.Pipe"
