@@ -1,6 +1,6 @@
-## Package Overview
+## Overview
 
-This package provides a medium to send and receive events simultaneously. And it includes APIs to produce, consume and return events via a stream.
+This module provides a medium to send and receive events simultaneously. And it includes APIs to produce, consume and return events via a stream.
 
 ## Pipe
 
