@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## Unreleased
 
+## [1.2.0] - 2022-10-28
+
 ## Changed
 - [[#14] Validate Timeout Values and Allow `-1` as a Timeout Value for Unbounded API Calls](https://github.com/xlibb/module-pipe/issues/14)
 
