@@ -18,7 +18,6 @@ package io.xlibb.pipe;
 
 import io.ballerina.runtime.api.Environment;
 import io.ballerina.runtime.api.Future;
-import io.ballerina.runtime.api.values.BDecimal;
 import io.ballerina.runtime.api.values.BError;
 import io.ballerina.runtime.api.values.BObject;
 import io.xlibb.pipe.observer.Callback;
@@ -37,7 +36,7 @@ public class ResultIterator {
         if (pipe != null) {
             Future future = env.markAsync();
             Callback observer = new Callback(future, pipe.getProducer(), pipe.getTimeKeeper(), pipe.getConsumer());
-            BDecimal timeout = (BDecimal) streamGenerator.getNativeData(TIME_OUT);
+            long timeout = (long) streamGenerator.getNativeData(TIME_OUT);
             pipe.asyncConsume(observer, timeout);
             return null;
         }
@@ -45,11 +44,11 @@ public class ResultIterator {
     }
 
     public static BError close(Environment env, BObject streamGenerator) {
-        BDecimal timeOut = (BDecimal) streamGenerator.getNativeData(TIME_OUT);
+        long timeOut = (long) streamGenerator.getNativeData(TIME_OUT);
         Pipe pipe = ((Pipe) streamGenerator.getNativeData(NATIVE_PIPE));
         if (pipe == null) {
-            BError cause = createError("Closing of a closed pipe is not allowed.");
-            return createError("Failed to close the stream.", cause);
+            BError cause = createError("Closing of a closed pipe is not allowed");
+            return createError("Failed to close the stream", cause);
         }
         Future future = env.markAsync();
         Callback observer = new Callback(future, null, null, null);

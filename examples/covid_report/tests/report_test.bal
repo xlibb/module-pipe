@@ -31,7 +31,10 @@ function testPipeConcurrently() returns error? {
     }
 
     worker B {
-        stream<int, error?> intStream = pipe.consumeStream(timeout = 10.12323);
+        stream<int, error?>|pipe:Error intStream = pipe.consumeStream(timeout = 10.12323);
+        if intStream is pipe:Error {
+            return;
+        }
         IntRecord|error? 'record = intStream.next();
         int i = 0;
         while 'record is IntRecord {
@@ -61,7 +64,10 @@ function testPipeWithObjectsConcurrently() returns error? {
     }
 
     worker B {
-        stream<Report, error?> covidReports = pipe.consumeStream(timeout = 10.12323);
+        stream<Report, error?>|pipe:Error covidReports = pipe.consumeStream(timeout = 10.12323);
+        if covidReports is pipe:Error {
+            return;
+        }
         CovidRecord|error? covidRecord = covidReports.next();
         test:assertExactEquals(covidRecord, report);
     }

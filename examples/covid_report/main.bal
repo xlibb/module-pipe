@@ -37,7 +37,10 @@ public function main() returns error? {
     }
 
     worker B {
-        stream<Report, error?> covidReports = pipe.consumeStream(timeout = 5.12323);
+        stream<Report, error?>|pipe:Error covidReports = pipe.consumeStream(timeout = 5.12323);
+        if covidReports is pipe:Error {
+            return;
+        }
         CovidRecord|error? covidRecord = covidReports.next();
         int i = 0;
         while covidRecord is CovidRecord {
