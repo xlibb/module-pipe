@@ -130,10 +130,9 @@ public class Pipe implements IPipe {
     protected void asyncClose(Callback callback, long timeout) {
         if (this.isClosed.get()) {
             callback.onError(createError("Closing of a closed pipe is not allowed"));
+        } else if (timeout == -1) {
+            callback.onError(createError("Graceful close must provide 0 or greater timeout"));
         } else {
-            if (timeout == -1) {
-                callback.onError(createError("Graceful close must provide 0 or greater timeout"));
-            }
             this.isClosed.compareAndSet(false, true);
             if (this.queueSize.get() != 0) {
                 emptyQueue.registerObserver(callback);

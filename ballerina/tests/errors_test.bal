@@ -172,6 +172,13 @@ isolated function testNegativeTimeout() returns error? {
     } else {
         test:assertFail("Expected an error");
     }
+    closeResult = pipe.gracefulClose(-1);
+    if closeResult is Error {
+        string expectedMessage = "Graceful close must provide 0 or greater timeout";
+        test:assertEquals(closeResult.message(), expectedMessage);
+    } else {
+        test:assertFail("Expected an error");
+    }
 }
 
 @test:Config {
@@ -195,7 +202,7 @@ function testInfiniteWaiting() returns error? {
             if result is error {
                 test:assertFail("Unexpected error occurred");
             }
-            runtime:sleep(31);
+            runtime:sleep(5);
         }
     }
 }
