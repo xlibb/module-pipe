@@ -35,7 +35,7 @@ function testPipe() returns error? {
 function testPipeWithRecords() returns error? {
     Pipe pipe = new(5);
     MovieRecord movieRecord = {name: "The Trial of the Chicago 7", director: "Aaron Sorkin"};
-    check pipe.produce(movieRecord, timeout = 5);
+    check pipe.produce(movieRecord.cloneReadOnly(), timeout = 5);
     stream<MovieRecord, error?> 'stream = check pipe.consumeStream(5);
     record {|MovieRecord value;|}? 'record = check 'stream.next();
     MovieRecord actualValue = (<record {|MovieRecord value;|}>'record).value;

@@ -59,7 +59,7 @@ function testPipeWithObjectsConcurrently() returns error? {
         deaths: 16511
     };
     worker A {
-        pipe:Error? produce = pipe.produce(report, timeout = 5.00111);
+        pipe:Error? produce = pipe.produce(report.cloneReadOnly(), timeout = 5.00111);
         test:assertTrue(produce !is pipe:Error);
     }
 
