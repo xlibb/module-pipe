@@ -24,7 +24,7 @@ public function main() returns error? {
     Report[] reports = check getReportData();
     worker A {
         foreach Report report in reports {
-            pipe:Error? produce = pipe.produce(report, timeout = 5);
+            pipe:Error? produce = pipe.produce(report.cloneReadOnly(), timeout = 5);
             if produce is pipe:Error {
                 log:printError("Error occurred while producing data to the pipe", produce);
             }
