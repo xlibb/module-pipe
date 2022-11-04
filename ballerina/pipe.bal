@@ -17,7 +17,7 @@
 import ballerina/jballerina.java;
 
 # Consists of APIs to exchange events concurrently.
-public isolated class Pipe {
+public isolated readonly class Pipe {
     private handle nativePipeObject;
 
     # Creates a new `pipe:Pipe` instance.
