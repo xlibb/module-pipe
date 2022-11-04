@@ -34,11 +34,11 @@ public isolated class Pipe {
 
     # Produces an event into the pipe.
     #
-    # + event - The event that needs to be produced to the pipe. Can be `any` type
+    # + event - The event that needs to be produced to the pipe. This only supports `readonly|isolated object {}` types
     # + timeout - The maximum waiting period that holds the event. Set the timeout to `-1` to wait without a time limit.
     #             Any other negative value will return a `pipe:Error`
     # + return - Returns `()` if the event is successfully produced. Otherwise returns a `pipe:Error`
-    public isolated function produce(any event, decimal timeout) returns Error? = @java:Method {
+    public isolated function produce(Event event, decimal timeout) returns Error? = @java:Method {
         'class: "io.xlibb.pipe.Pipe"
     } external;
 
