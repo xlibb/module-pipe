@@ -30,6 +30,7 @@ import static io.xlibb.pipe.utils.Utils.createError;
  * Java implementation for the APIs of the stream returned from the pipe.
  */
 public class ResultIterator {
+    private ResultIterator() {}
 
     public static Object nextValue(Environment env, BObject streamGenerator) {
         Pipe pipe = (Pipe) streamGenerator.getNativeData(NATIVE_PIPE);
