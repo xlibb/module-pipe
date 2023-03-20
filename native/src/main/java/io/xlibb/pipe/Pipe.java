@@ -64,6 +64,8 @@ public class Pipe implements IPipe {
     private final Observable consumer;
     private final Observable emptyQueue;
     private final Observable timeKeeper;
+    private final Object consumeLock = new Object();
+    private final Object produceLock = new Object();
 
     public Pipe(Long limit) {
         this(limit, ValueCreator.createObjectValue(getModule(), TIMER));
@@ -84,31 +86,41 @@ public class Pipe implements IPipe {
     protected void asyncProduce(Callback callback, Object event, long timeout) {
         if (event == null) {
             callback.onError(createError("Nil values cannot be produced to a pipe"));
-        } else if (this.isClosed.get()) {
+            return;
+        }
+        if (this.isClosed.get()) {
             callback.onError(createError("Events cannot be produced to a closed pipe"));
-        } else if (this.queueSize.get() == this.limit) {
-            callback.setEvent(event);
-            this.consumer.registerObserver(callback);
-            this.scheduleAction(callback, timeout);
-        } else {
-            queue.add(event);
-            queueSize.incrementAndGet();
-            this.producer.notifyObservers(event);
-            callback.onSuccess(null);
+            return;
+        }
+        synchronized (this.produceLock) {
+            if (this.queueSize.get() == this.limit) {
+                callback.setEvent(event);
+                this.consumer.registerObserver(callback);
+                this.scheduleAction(callback, timeout);
+            } else {
+                queue.add(event);
+                queueSize.incrementAndGet();
+                this.producer.notifyObservers(event);
+                callback.onSuccess(null);
+            }
         }
     }
 
     protected void asyncConsume(Callback callback, long timeout) {
         if (this.queue == null) {
             callback.onSuccess(null);
-        } else if (this.queueSize.get() == 0) {
-            this.emptyQueue.notifyObservers(true);
-            this.producer.registerObserver(callback);
-            this.scheduleAction(callback, timeout);
-        } else {
-            queueSize.decrementAndGet();
-            callback.onSuccess(queue.remove());
-            this.consumer.notifyObservers();
+            return;
+        }
+        synchronized (this.consumeLock) {
+            if (this.queueSize.get() == 0) {
+                this.emptyQueue.notifyObservers(true);
+                this.producer.registerObserver(callback);
+                this.scheduleAction(callback, timeout);
+            } else {
+                queueSize.decrementAndGet();
+                callback.onSuccess(queue.remove());
+                this.consumer.notifyObservers();
+            }
         }
     }
 
