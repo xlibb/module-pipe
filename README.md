@@ -4,6 +4,7 @@
 [![codecov](https://codecov.io/gh/xlibb/module-pipe/branch/main/graph/badge.svg)](https://codecov.io/gh/xlibb/module-pipe)
 [![GitHub Last Commit](https://img.shields.io/github/last-commit/xlibb/module-pipe.svg)](https://github.com/xlibb/module-pipe/commits/main)
 [![Github issues](https://img.shields.io/github/issues/xlibb/module-pipe/module/pipe.svg?label=Open%20Issues)](https://github.com/xlibb/module-pipe/labels/module%2Fpipe)
+[![GraalVM Check](https://github.com/xlibb/module-pipe/actions/workflows/build-with-bal-test-graalvm.yml/badge.svg)](https://github.com/xlibb/module-pipe/actions/workflows/build-with-bal-test-graalvm.yml)
 
 This library provides a medium to send and receive events simultaneously. And it includes APIs to produce, consume and return events via a stream.
 
