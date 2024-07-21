@@ -21,7 +21,9 @@ import io.ballerina.runtime.api.Future;
 import io.ballerina.runtime.api.PredefinedTypes;
 import io.ballerina.runtime.api.creators.TypeCreator;
 import io.ballerina.runtime.api.creators.ValueCreator;
+import io.ballerina.runtime.api.types.Type;
 import io.ballerina.runtime.api.types.UnionType;
+import io.ballerina.runtime.api.utils.ValueUtils;
 import io.ballerina.runtime.api.values.BDecimal;
 import io.ballerina.runtime.api.values.BError;
 import io.ballerina.runtime.api.values.BHandle;
@@ -106,7 +108,7 @@ public class Pipe implements IPipe {
         }
     }
 
-    protected void asyncConsume(Callback callback, long timeout) {
+    protected void asyncConsume(Callback callback, long timeout, Type type) {
         if (this.queue == null) {
             callback.onSuccess(null);
             return;
@@ -118,7 +120,7 @@ public class Pipe implements IPipe {
                 this.scheduleAction(callback, timeout);
             } else {
                 queueSize.decrementAndGet();
-                callback.onSuccess(queue.remove());
+                callback.onSuccess(ValueUtils.convert(queue.remove(), type));
                 this.consumer.notifyObservers();
             }
         }
@@ -171,7 +173,7 @@ public class Pipe implements IPipe {
             return createError("Invalid consume timeout value provided", bError);
         }
         UnionType typeUnion = TypeCreator.createUnionType(PredefinedTypes.TYPE_NULL, PredefinedTypes.TYPE_ERROR);
-        BObject resultIterator = ValueCreator.createObjectValue(getModule(), RESULT_ITERATOR);
+        BObject resultIterator = ValueCreator.createObjectValue(getModule(), RESULT_ITERATOR, typeParam);
         BObject streamGenerator = ValueCreator.createObjectValue(getModule(), STREAM_GENERATOR, resultIterator);
         BHandle handle = (BHandle) pipe.get(NATIVE_PIPE_OBJECT);
         streamGenerator.addNativeData(NATIVE_PIPE, handle.getValue());
@@ -208,7 +210,7 @@ public class Pipe implements IPipe {
         Future future = env.markAsync();
         Callback observer = new Callback(future, nativePipe.getProducer(), nativePipe.getTimeKeeper(),
                                          nativePipe.getConsumer());
-        nativePipe.asyncConsume(observer, timeoutInMillis);
+        nativePipe.asyncConsume(observer, timeoutInMillis, typeParam.getDescribingType());
         return null;
     }
 

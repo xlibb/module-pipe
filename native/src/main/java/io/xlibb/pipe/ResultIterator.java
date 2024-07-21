@@ -20,6 +20,7 @@ import io.ballerina.runtime.api.Environment;
 import io.ballerina.runtime.api.Future;
 import io.ballerina.runtime.api.values.BError;
 import io.ballerina.runtime.api.values.BObject;
+import io.ballerina.runtime.api.values.BTypedesc;
 import io.xlibb.pipe.observer.Callback;
 
 import static io.xlibb.pipe.utils.Utils.NATIVE_PIPE;
@@ -32,13 +33,13 @@ import static io.xlibb.pipe.utils.Utils.createError;
 public class ResultIterator {
     private ResultIterator() {}
 
-    public static Object nextValue(Environment env, BObject streamGenerator) {
+    public static Object nextValue(Environment env, BObject streamGenerator, BTypedesc typeParam) {
         Pipe pipe = (Pipe) streamGenerator.getNativeData(NATIVE_PIPE);
         if (pipe != null) {
             Future future = env.markAsync();
             Callback observer = new Callback(future, pipe.getProducer(), pipe.getTimeKeeper(), pipe.getConsumer());
             long timeout = (long) streamGenerator.getNativeData(TIME_OUT);
-            pipe.asyncConsume(observer, timeout);
+            pipe.asyncConsume(observer, timeout, typeParam.getDescribingType());
             return null;
         }
         return createError("Events cannot be consumed after the stream is closed");

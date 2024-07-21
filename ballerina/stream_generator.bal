@@ -24,7 +24,7 @@ class StreamGenerator {
     }
 
     public isolated function next() returns record {|any value;|}|Error? {
-        any streamValue = check self.resultIterator.nextValue(self);
+        any streamValue = check self.resultIterator.nextValue(self, self.resultIterator.typeDescriptor);
         return streamValue is () ? () : {value: streamValue};
     }
 
@@ -34,8 +34,14 @@ class StreamGenerator {
 }
 
 class ResultIterator {
+    typedesc typeDescriptor;
 
-    isolated function nextValue(StreamGenerator streamGenerator) returns any|Error = @java:Method {
+    isolated function init(typedesc typeDescriptor) {
+        self.typeDescriptor = typeDescriptor;
+    }
+
+    isolated function nextValue(StreamGenerator streamGenerator, typedesc typeDescriptor)
+        returns any|Error = @java:Method {
         'class: "io.xlibb.pipe.ResultIterator"
     } external;
 
