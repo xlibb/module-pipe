@@ -30,9 +30,20 @@ function testPipe() returns error? {
 }
 
 @test:Config {
-    groups: ["records"]
+    groups: ["main_apis"]
 }
 function testPipeWithRecords() returns error? {
+    Pipe pipe = new(5);
+    MovieRecord movieRecord = {name: "The Trial of the Chicago 7", director: "Aaron Sorkin"};
+    check pipe.produce(movieRecord.cloneReadOnly(), timeout = 2);
+    MovieRecord actualValue = check pipe.consume(5);
+    test:assertEquals(actualValue, movieRecord);
+}
+
+@test:Config {
+    groups: ["records"]
+}
+function testPipeStreamWithRecords() returns error? {
     Pipe pipe = new(5);
     MovieRecord movieRecord = {name: "The Trial of the Chicago 7", director: "Aaron Sorkin"};
     check pipe.produce(movieRecord.cloneReadOnly(), timeout = 5);
