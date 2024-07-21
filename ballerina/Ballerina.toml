@@ -6,8 +6,11 @@ authors = ["xlibb"]
 keywords = ["pipe"]
 repository = "https://github.com/xlibb/module-pipe"
 license = ["Apache-2.0"]
-distribution = "2201.4.0"
+distribution = "2201.8.0"
 icon = "icon.png"
 
-[[platform.java11.dependency]]
+[[platform.java17.dependency]]
+groupId = "io.xlibb.pipe"
+artifactId = "pipe-native"
+version = "1.4.2"
 path = "../native/build/libs/pipe-native-1.4.2-SNAPSHOT.jar"
