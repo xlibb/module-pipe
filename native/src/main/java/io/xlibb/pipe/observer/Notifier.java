@@ -10,8 +10,8 @@ import java.util.TimerTask;
 public class Notifier extends TimerTask {
     Observable timeKeeper;
     Callback callback;
-    public static final String OPERATION_TIMEOUT_ERROR = "Operation has timed out";
-    
+    private static final String OPERATION_TIMEOUT_ERROR = "Operation has timed out";
+
     public Notifier(Observable timeKeeper, Callback callback) {
         this.timeKeeper = timeKeeper;
         this.callback = callback;

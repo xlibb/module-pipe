@@ -69,11 +69,11 @@ public class Pipe implements IPipe {
     private final Observable timeKeeper;
     private final Object consumeLock = new Object();
     private final Object produceLock = new Object();
-    public static final String PRODUCE_NIL_ERROR = "Nil values cannot be produced to a pipe";
-    public static final String PRODUCE_TO_CLOSED_PIPE = "Events cannot be produced to a closed pipe";
-    public static final String NEGATIVE_TIMEOUT_ERROR = "Graceful close must provide 0 or greater timeout";
-    public static final String TIMEOUT_ERROR = "Timeout cannot be less than -1. Provided: %s";
-    public static final String INVALID_TIMEOUT_ERROR = "Invalid timeout value provided";
+    private static final String PRODUCE_NIL_ERROR = "Nil values cannot be produced to a pipe";
+    private static final String PRODUCE_TO_CLOSED_PIPE = "Events cannot be produced to a closed pipe";
+    private static final String NEGATIVE_TIMEOUT_ERROR = "Graceful close must provide 0 or greater timeout";
+    private static final String TIMEOUT_ERROR = "Timeout cannot be less than -1. Provided: %s";
+    private static final String INVALID_TIMEOUT_ERROR = "Invalid timeout value provided";
 
     public Pipe(Long limit) {
         this(limit, ValueCreator.createObjectValue(getModule(), TIMER));
