@@ -107,7 +107,7 @@ function testGracefulClosingOfClosedPipe() returns error? {
 }
 function testClosingOfClosedStreamInPipe() returns error? {
     Pipe pipe = new (1);
-    string expectedValue = "Failed to close the stream";
+    string expectedValue = "Attempting to close a closed pipe";
     check pipe.produce("data", timeout = 1);
     stream<string, error?> resultStream = check pipe.consumeStream(5);
     check resultStream.close();
