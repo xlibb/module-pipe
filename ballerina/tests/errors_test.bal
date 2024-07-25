@@ -56,6 +56,24 @@ function testTimeoutErrorsInConsume() returns error? {
 }
 
 @test:Config {
+    groups: ["errors"]
+}
+function testPipeStreamWithErrors() returns error? {
+    Pipe pipe = new(5);
+    MovieRecord movieRecord = {name: "The Trial of the Chicago 7", director: "Aaron Sorkin"};
+    check pipe.produce(movieRecord.cloneReadOnly(), timeout = 5);
+    stream<MovieRecord, error?> 'stream = check pipe.consumeStream(5);
+    record {|MovieRecord value;|}? 'record = check 'stream.next();
+    MovieRecord actualValue = (<record {|MovieRecord value;|}>'record).value;
+    MovieRecord expectedValue = movieRecord;
+    test:assertEquals(actualValue, expectedValue);
+    check pipe.produce("test", timeout = 5);
+    record {|MovieRecord value;|}|error? next = 'stream.next();
+    test:assertTrue(next is Error);
+    test:assertEquals((<Error>next).message(), "{ballerina}ConversionError");
+}
+
+@test:Config {
     groups: ["errors", "close"]
 }
 function testImmediateClosingOfClosedPipe() returns error? {

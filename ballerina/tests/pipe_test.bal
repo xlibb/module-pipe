@@ -18,9 +18,7 @@ import ballerina/lang.runtime;
 import ballerina/test;
 import ballerina/time;
 
-@test:Config {
-    groups: ["main_apis"]
-}
+@test:Config {}
 function testPipe() returns error? {
     Pipe pipe = new(5);
     check pipe.produce("pipe_test", timeout = 2);
@@ -29,20 +27,17 @@ function testPipe() returns error? {
     test:assertEquals(actualValue, expectedValue);
 }
 
-@test:Config {
-    groups: ["main_apis"]
-}
+@test:Config {}
 function testPipeWithRecords() returns error? {
     Pipe pipe = new(5);
     MovieRecord movieRecord = {name: "The Trial of the Chicago 7", director: "Aaron Sorkin"};
     check pipe.produce(movieRecord.cloneReadOnly(), timeout = 2);
-    MovieRecord actualValue = check pipe.consume(5);
+    MovieRecord actualValue = check pipe.consume(-1);
+    check pipe.produce(movieRecord.cloneReadOnly(), timeout = 2);
     test:assertEquals(actualValue, movieRecord);
 }
 
-@test:Config {
-    groups: ["records"]
-}
+@test:Config {}
 function testPipeStreamWithRecords() returns error? {
     Pipe pipe = new(5);
     MovieRecord movieRecord = {name: "The Trial of the Chicago 7", director: "Aaron Sorkin"};
@@ -54,9 +49,7 @@ function testPipeStreamWithRecords() returns error? {
     test:assertEquals(actualValue, expectedValue);
 }
 
-@test:Config {
-    groups: ["main_apis"]
-}
+@test:Config {}
 function testPipeStream() returns error? {
     Pipe pipe = new(5);
     check pipe.produce("1", timeout = 5);
@@ -80,7 +73,7 @@ function testPipeStream() returns error? {
 }
 
 @test:Config {
-    groups: ["close", "main_apis"]
+    groups: ["close"]
 }
 function testImmediateClose() returns error? {
     Pipe pipe = new(5);
@@ -91,7 +84,7 @@ function testImmediateClose() returns error? {
 }
 
 @test:Config {
-    groups: ["close", "main_apis"]
+    groups: ["close"]
 }
 function testConsumeStreamAfterClose() returns error? {
     Pipe pipe = new(5);
@@ -105,7 +98,7 @@ function testConsumeStreamAfterClose() returns error? {
 }
 
 @test:Config {
-    groups: ["close", "main_apis"]
+    groups: ["close"]
 }
 function testGracefulClose() returns error? {
     Pipe pipe = new(5);
@@ -120,7 +113,7 @@ function testGracefulClose() returns error? {
 }
 
 @test:Config {
-    groups: ["close", "main_apis"]
+    groups: ["close"]
 }
 function testIsClosedInPipe() returns error? {
     Pipe pipe = new(5);
@@ -165,9 +158,7 @@ function testWaitingInGracefulClose() returns error? {
     }
 }
 
-@test:Config {
-    groups: ["main_apis"]
-}
+@test:Config {}
 function testWaitingInConsume() returns error? {
     Pipe pipe = new(1);
     int expectedValue = 3;
@@ -184,9 +175,7 @@ function testWaitingInConsume() returns error? {
     }
 }
 
-@test:Config {
-    groups: ["main_apis"]
-}
+@test:Config {}
 function testWaitingInProduce() returns error? {
     Pipe pipe = new(1);
     int expectedValue = 10;
@@ -211,9 +200,7 @@ function testWaitingInProduce() returns error? {
     }
 }
 
-@test:Config {
-    groups: ["main_apis"]
-}
+@test:Config {}
 function testConcurrencyInPipe() returns error? {
     Pipe pipe = new(1);
     int expectedValue = 3;
@@ -252,9 +239,7 @@ function testConcurrencyInPipe() returns error? {
     }
 }
 
-@test:Config {
-    groups: ["main_apis"]
-}
+@test:Config {}
 function testPipesWithTimer() returns error? {
     Timer timeKeeper = new();
 
