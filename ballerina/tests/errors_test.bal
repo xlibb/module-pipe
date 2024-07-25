@@ -78,7 +78,7 @@ function testPipeStreamWithErrors() returns error? {
 }
 function testImmediateClosingOfClosedPipe() returns error? {
     Pipe pipe = new (1);
-    string expectedValue = "Closing of a closed pipe is not allowed";
+    string expectedValue = "Attempting to close a closed pipe";
     check pipe.immediateClose();
     Error? immediateCloseResult = pipe.immediateClose();
     test:assertTrue(immediateCloseResult is Error);
@@ -91,7 +91,7 @@ function testImmediateClosingOfClosedPipe() returns error? {
 }
 function testGracefulClosingOfClosedPipe() returns error? {
     Pipe pipe = new (1);
-    string expectedValue = "Closing of a closed pipe is not allowed";
+    string expectedValue = "Attempting to close a closed pipe";
     time:Utc currentUtc = time:utcNow();
     check pipe.gracefulClose();
     Error? gracefulCloseResult = pipe.gracefulClose();

@@ -40,7 +40,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static io.xlibb.pipe.ResultIterator.CLOSING_ERROR;
+import static io.xlibb.pipe.ResultIterator.CLOSED_PIPE_ERROR;
 import static io.xlibb.pipe.utils.ModuleUtils.getModule;
 import static io.xlibb.pipe.utils.Utils.NATIVE_PIPE;
 import static io.xlibb.pipe.utils.Utils.NATIVE_PIPE_OBJECT;
@@ -55,9 +55,13 @@ import static io.xlibb.pipe.utils.Utils.createError;
  * Provide APIs to exchange events concurrently.
  */
 public class Pipe implements IPipe {
-
     private static final long INFINITE_WAIT = -1;
     private static final BDecimal MILLISECONDS_FACTOR = ValueCreator.createDecimalValue(new BigDecimal(1000));
+    private static final String PRODUCE_NIL_ERROR = "Nil values cannot be produced to a pipe";
+    private static final String PRODUCE_TO_CLOSED_PIPE = "Events cannot be produced to a closed pipe";
+    private static final String NEGATIVE_TIMEOUT_ERROR = "Graceful close must provide 0 or greater timeout";
+    private static final String TIMEOUT_ERROR = "Timeout cannot be less than -1. Provided: %s";
+    private static final String INVALID_TIMEOUT_ERROR = "Invalid timeout value provided";
     private ConcurrentLinkedQueue<Object> queue;
     private final AtomicInteger queueSize;
     private final Long limit;
@@ -69,11 +73,6 @@ public class Pipe implements IPipe {
     private final Observable timeKeeper;
     private final Object consumeLock = new Object();
     private final Object produceLock = new Object();
-    private static final String PRODUCE_NIL_ERROR = "Nil values cannot be produced to a pipe";
-    private static final String PRODUCE_TO_CLOSED_PIPE = "Events cannot be produced to a closed pipe";
-    private static final String NEGATIVE_TIMEOUT_ERROR = "Graceful close must provide 0 or greater timeout";
-    private static final String TIMEOUT_ERROR = "Timeout cannot be less than -1. Provided: %s";
-    private static final String INVALID_TIMEOUT_ERROR = "Invalid timeout value provided";
 
     public Pipe(Long limit) {
         this(limit, ValueCreator.createObjectValue(getModule(), TIMER));
@@ -101,7 +100,7 @@ public class Pipe implements IPipe {
             return;
         }
         synchronized (this.produceLock) {
-            if (this.queueSize.get() == this.limit || queue.size() == this.limit) {
+            if (this.queueSize.get() == this.limit) {
                 callback.setEvent(event);
                 this.consumer.registerObserver(callback);
                 this.scheduleAction(callback, timeout);
@@ -145,7 +144,7 @@ public class Pipe implements IPipe {
     @Override
     public BError immediateClose() {
         if (this.isClosed.get()) {
-            return createError(CLOSING_ERROR);
+            return createError(CLOSED_PIPE_ERROR);
         }
         this.isClosed.compareAndSet(false, true);
         this.queue = null;
@@ -154,7 +153,7 @@ public class Pipe implements IPipe {
 
     protected void asyncClose(Callback callback, long timeout) {
         if (this.isClosed.get()) {
-            callback.onError(createError(CLOSING_ERROR));
+            callback.onError(createError(CLOSED_PIPE_ERROR));
         } else if (timeout == -1) {
             callback.onError(createError(NEGATIVE_TIMEOUT_ERROR));
         } else {
@@ -195,12 +194,7 @@ public class Pipe implements IPipe {
 
     public static BError produce(Environment env, BObject pipe, Object event, BDecimal timeout) {
         try {
-            long timeoutInMillis;
-            try {
-                timeoutInMillis = getTimeoutInMillis(timeout);
-            } catch (BError bError) {
-                return createError(INVALID_TIMEOUT_ERROR, bError);
-            }
+            long timeoutInMillis = getTimeoutInMillis(timeout);
             BHandle handle = (BHandle) pipe.get(NATIVE_PIPE_OBJECT);
             Pipe nativePipe = (Pipe) handle.getValue();
             Future future = env.markAsync();
@@ -208,6 +202,8 @@ public class Pipe implements IPipe {
                     nativePipe.getProducer());
             nativePipe.asyncProduce(observer, event, timeoutInMillis);
             return null;
+        } catch (BError bError) {
+            return createError(INVALID_TIMEOUT_ERROR, bError);
         } catch (Exception e) {
             return createError(e.getMessage());
         }
