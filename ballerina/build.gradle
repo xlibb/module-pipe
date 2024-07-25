@@ -63,10 +63,6 @@ ballerina {
     testCoverageParam = "--code-coverage --coverage-format=xml --includes=io.xlibb.pipe.*:xlibb.pipe*"
 }
 
-configurations {
-    externalJars
-}
-
 dependencies {
     jbalTools("org.ballerinalang:jballerina-tools:${ballerinaLangVersion}") {
         transitive = false
