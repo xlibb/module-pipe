@@ -40,6 +40,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static io.xlibb.pipe.ResultIterator.CLOSING_ERROR;
 import static io.xlibb.pipe.utils.ModuleUtils.getModule;
 import static io.xlibb.pipe.utils.Utils.NATIVE_PIPE;
 import static io.xlibb.pipe.utils.Utils.NATIVE_PIPE_OBJECT;
@@ -68,6 +69,11 @@ public class Pipe implements IPipe {
     private final Observable timeKeeper;
     private final Object consumeLock = new Object();
     private final Object produceLock = new Object();
+    public static final String PRODUCE_NIL_ERROR = "Nil values cannot be produced to a pipe";
+    public static final String PRODUCE_TO_CLOSED_PIPE = "Events cannot be produced to a closed pipe";
+    public static final String NEGATIVE_TIMEOUT_ERROR = "Graceful close must provide 0 or greater timeout";
+    public static final String TIMEOUT_ERROR = "Timeout cannot be less than -1. Provided: %s";
+    public static final String INVALID_TIMEOUT_ERROR = "Invalid timeout value provided";
 
     public Pipe(Long limit) {
         this(limit, ValueCreator.createObjectValue(getModule(), TIMER));
@@ -87,11 +93,11 @@ public class Pipe implements IPipe {
 
     protected void asyncProduce(Callback callback, Object event, long timeout) {
         if (event == null) {
-            callback.onError(createError("Nil values cannot be produced to a pipe"));
+            callback.onError(createError(PRODUCE_NIL_ERROR));
             return;
         }
         if (this.isClosed.get()) {
-            callback.onError(createError("Events cannot be produced to a closed pipe"));
+            callback.onError(createError(PRODUCE_TO_CLOSED_PIPE));
             return;
         }
         synchronized (this.produceLock) {
@@ -139,7 +145,7 @@ public class Pipe implements IPipe {
     @Override
     public BError immediateClose() {
         if (this.isClosed.get()) {
-            return createError("Closing of a closed pipe is not allowed");
+            return createError(CLOSING_ERROR);
         }
         this.isClosed.compareAndSet(false, true);
         this.queue = null;
@@ -148,9 +154,9 @@ public class Pipe implements IPipe {
 
     protected void asyncClose(Callback callback, long timeout) {
         if (this.isClosed.get()) {
-            callback.onError(createError("Closing of a closed pipe is not allowed"));
+            callback.onError(createError(CLOSING_ERROR));
         } else if (timeout == -1) {
-            callback.onError(createError("Graceful close must provide 0 or greater timeout"));
+            callback.onError(createError(NEGATIVE_TIMEOUT_ERROR));
         } else {
             this.isClosed.compareAndSet(false, true);
             if (this.queueSize.get() != 0) {
@@ -175,7 +181,7 @@ public class Pipe implements IPipe {
         try {
             timeoutInMillis = getTimeoutInMillis(timeout);
         } catch (BError bError) {
-            return createError("Invalid consume timeout value provided", bError);
+            return createError(INVALID_TIMEOUT_ERROR, bError);
         }
         UnionType typeUnion = TypeCreator.createUnionType(PredefinedTypes.TYPE_NULL, PredefinedTypes.TYPE_ERROR);
         BObject resultIterator = ValueCreator.createObjectValue(getModule(), RESULT_ITERATOR, typeParam);
@@ -193,7 +199,7 @@ public class Pipe implements IPipe {
             try {
                 timeoutInMillis = getTimeoutInMillis(timeout);
             } catch (BError bError) {
-                return createError("Invalid produce timeout value provided", bError);
+                return createError(INVALID_TIMEOUT_ERROR, bError);
             }
             BHandle handle = (BHandle) pipe.get(NATIVE_PIPE_OBJECT);
             Pipe nativePipe = (Pipe) handle.getValue();
@@ -213,7 +219,7 @@ public class Pipe implements IPipe {
             try {
                 timeoutInMillis = getTimeoutInMillis(timeout);
             } catch (BError bError) {
-                return createError("Invalid consume timeout value provided", bError);
+                return createError(INVALID_TIMEOUT_ERROR, bError);
             }
             BHandle handle = (BHandle) pipe.get(NATIVE_PIPE_OBJECT);
             Pipe nativePipe = (Pipe) handle.getValue();
@@ -232,7 +238,7 @@ public class Pipe implements IPipe {
         try {
             timeoutInMillis = getTimeoutInMillis(timeout);
         } catch (BError bError) {
-            return createError("Invalid graceful timeout value provided", bError);
+            return createError(INVALID_TIMEOUT_ERROR, bError);
         }
         BHandle handle = (BHandle) pipe.get(NATIVE_PIPE_OBJECT);
         Pipe nativePipe = (Pipe) handle.getValue();
@@ -246,7 +252,7 @@ public class Pipe implements IPipe {
         if (timeout.floatValue() == -1) {
             return INFINITE_WAIT;
         } else if (timeout.floatValue() < 0) {
-            throw createError("Timeout cannot be less than -1. Provided: " + timeout);
+            throw createError(String.format(TIMEOUT_ERROR, timeout));
         }
         BDecimal timeoutInMillis = timeout.multiply(MILLISECONDS_FACTOR);
         return Double.valueOf(timeoutInMillis.floatValue()).longValue();

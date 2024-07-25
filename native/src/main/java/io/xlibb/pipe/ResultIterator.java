@@ -31,6 +31,10 @@ import static io.xlibb.pipe.utils.Utils.createError;
  * Java implementation for the APIs of the stream returned from the pipe.
  */
 public class ResultIterator {
+    public static final String CLOSING_ERROR = "Closing of a closed pipe is not allowed";
+    public static final String CLOSING_FAILED_ERROR = "Failed to close the stream";
+    public static final String PRODUCE_TO_CLOSED_PIPE_ERROR = "Events cannot be consumed after the stream is closed";
+
     private ResultIterator() {}
 
     public static Object nextValue(Environment env, BObject streamGenerator, BTypedesc typeParam) {
@@ -42,15 +46,15 @@ public class ResultIterator {
             pipe.asyncConsume(observer, timeout, typeParam.getDescribingType());
             return null;
         }
-        return createError("Events cannot be consumed after the stream is closed");
+        return createError(PRODUCE_TO_CLOSED_PIPE_ERROR);
     }
 
     public static BError close(Environment env, BObject streamGenerator) {
         long timeOut = (long) streamGenerator.getNativeData(TIME_OUT);
         Pipe pipe = ((Pipe) streamGenerator.getNativeData(NATIVE_PIPE));
         if (pipe == null) {
-            BError cause = createError("Closing of a closed pipe is not allowed");
-            return createError("Failed to close the stream", cause);
+            BError cause = createError(CLOSING_ERROR);
+            return createError(CLOSING_FAILED_ERROR, cause);
         }
         Future future = env.markAsync();
         Callback observer = new Callback(future, null, null, null);
