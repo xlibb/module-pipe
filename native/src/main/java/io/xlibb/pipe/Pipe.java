@@ -95,7 +95,7 @@ public class Pipe implements IPipe {
             return;
         }
         synchronized (this.produceLock) {
-            if (this.queueSize.get() == this.limit) {
+            if (this.queueSize.get() == this.limit || queue.size() == this.limit) {
                 callback.setEvent(event);
                 this.consumer.registerObserver(callback);
                 this.scheduleAction(callback, timeout);
@@ -114,14 +114,19 @@ public class Pipe implements IPipe {
             return;
         }
         synchronized (this.consumeLock) {
-            if (this.queueSize.get() == 0) {
+            if (this.queueSize.get() == 0 || queue.isEmpty()) {
                 this.emptyQueue.notifyObservers(true);
                 this.producer.registerObserver(callback);
                 this.scheduleAction(callback, timeout);
             } else {
-                queueSize.decrementAndGet();
-                callback.onSuccess(ValueUtils.convert(queue.remove(), type));
-                this.consumer.notifyObservers();
+                try {
+                    queueSize.decrementAndGet();
+                    this.consumer.notifyObservers();
+                    Object value = ValueUtils.convert(queue.remove(), type);
+                    callback.onSuccess(value);
+                } catch (Exception e) {
+                    callback.onError(createError(e.getMessage()));
+                }
             }
         }
     }
