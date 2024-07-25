@@ -188,35 +188,43 @@ public class Pipe implements IPipe {
     }
 
     public static BError produce(Environment env, BObject pipe, Object event, BDecimal timeout) {
-        long timeoutInMillis;
         try {
-            timeoutInMillis = getTimeoutInMillis(timeout);
-        } catch (BError bError) {
-            return createError("Invalid produce timeout value provided", bError);
+            long timeoutInMillis;
+            try {
+                timeoutInMillis = getTimeoutInMillis(timeout);
+            } catch (BError bError) {
+                return createError("Invalid produce timeout value provided", bError);
+            }
+            BHandle handle = (BHandle) pipe.get(NATIVE_PIPE_OBJECT);
+            Pipe nativePipe = (Pipe) handle.getValue();
+            Future future = env.markAsync();
+            Callback observer = new Callback(future, nativePipe.getConsumer(), nativePipe.getTimeKeeper(),
+                    nativePipe.getProducer());
+            nativePipe.asyncProduce(observer, event, timeoutInMillis);
+            return null;
+        } catch (Exception e) {
+            return createError(e.getMessage());
         }
-        BHandle handle = (BHandle) pipe.get(NATIVE_PIPE_OBJECT);
-        Pipe nativePipe = (Pipe) handle.getValue();
-        Future future = env.markAsync();
-        Callback observer = new Callback(future, nativePipe.getConsumer(), nativePipe.getTimeKeeper(),
-                                         nativePipe.getProducer());
-        nativePipe.asyncProduce(observer, event, timeoutInMillis);
-        return null;
     }
 
     public static Object consume(Environment env, BObject pipe, BDecimal timeout, BTypedesc typeParam) {
-        long timeoutInMillis;
         try {
-            timeoutInMillis = getTimeoutInMillis(timeout);
-        } catch (BError bError) {
-            return createError("Invalid consume timeout value provided", bError);
+            long timeoutInMillis;
+            try {
+                timeoutInMillis = getTimeoutInMillis(timeout);
+            } catch (BError bError) {
+                return createError("Invalid consume timeout value provided", bError);
+            }
+            BHandle handle = (BHandle) pipe.get(NATIVE_PIPE_OBJECT);
+            Pipe nativePipe = (Pipe) handle.getValue();
+            Future future = env.markAsync();
+            Callback observer = new Callback(future, nativePipe.getProducer(), nativePipe.getTimeKeeper(),
+                    nativePipe.getConsumer());
+            nativePipe.asyncConsume(observer, timeoutInMillis, typeParam.getDescribingType());
+            return null;
+        } catch (Exception e) {
+            return createError(e.getMessage());
         }
-        BHandle handle = (BHandle) pipe.get(NATIVE_PIPE_OBJECT);
-        Pipe nativePipe = (Pipe) handle.getValue();
-        Future future = env.markAsync();
-        Callback observer = new Callback(future, nativePipe.getProducer(), nativePipe.getTimeKeeper(),
-                                         nativePipe.getConsumer());
-        nativePipe.asyncConsume(observer, timeoutInMillis, typeParam.getDescribingType());
-        return null;
     }
 
     public static BError gracefulClose(Environment env, BObject pipe, BDecimal timeout) {
