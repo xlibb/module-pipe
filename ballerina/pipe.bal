@@ -35,7 +35,7 @@ public isolated class Pipe {
     # Produces an event into the pipe.
     #
     # + event - The event that needs to be produced to the pipe. This only supports `readonly|isolated object {}` types
-    # + timeout - The maximum waiting period that holds the event. Set the timeout to `-1` to wait without a time limit.
+    # + timeout - The maximum waiting period (in seconds) that holds the event. Set the timeout to `-1` to wait without a time limit.
     #             Any other negative value will return a `pipe:Error`
     # + return - Returns `()` if the event is successfully produced. Otherwise returns a `pipe:Error`
     public isolated function produce(Event event, decimal timeout) returns Error? = @java:Method {
@@ -44,7 +44,8 @@ public isolated class Pipe {
 
     # Consumes an event in the pipe.
     #
-    # + timeout - The maximum waiting period to consume the event. Set the timeout to `-1` to wait without a time limit.
+    # + timeout - The maximum waiting period (in seconds) to consume the event.
+    #             Set the timeout to `-1` to wait without a time limit.
     #             Any other negative value will return a `pipe:Error`
     # + typeParam - The `type` of data that is needed to be consumed. When not provided, the type is inferred
     # using the expected type from the function
@@ -57,7 +58,7 @@ public isolated class Pipe {
 
     # Consumes events in the pipe as a `stream`
     #
-    # + timeout - The maximum waiting period to consume events. Set the timeout to `-1` to wait without a time limit.
+    # + timeout - The maximum waiting period (in seconds) to consume events. Set the timeout to `-1` to wait without a time limit.
     #             Any other negative value will return a `pipe:Error`
     # + typeParam - The `type` of data that is needed to be consumed. When not provided, the type is inferred
     # using the expected type from the function
@@ -77,7 +78,7 @@ public isolated class Pipe {
 
     # Closes the pipe gracefully. Waits for some grace period until all the events in the pipe is consumed.
     #
-    # + timeout - The maximum grace period to wait until the pipe is empty. Setting the timeout to a negative value will
+    # + timeout - The maximum grace period (in seconds) to wait until the pipe is empty. Setting the timeout to a negative value will
     #             return a `pipe:Error`
     # + return - Return `()`, if the pipe is successfully closed. Otherwise returns a `pipe:Error`
     public isolated function gracefulClose(decimal timeout = 30) returns Error? = @java:Method {
