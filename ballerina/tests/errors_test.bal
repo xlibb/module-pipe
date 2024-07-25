@@ -160,7 +160,7 @@ isolated function testNegativeTimeout() returns error? {
     Pipe pipe = new(1);
     Error? produceResult = pipe.produce(1, -10);
     if produceResult is Error {
-        string expectedMessage = "Invalid produce timeout value provided";
+        string expectedMessage = "Invalid timeout value provided";
         string expectedCause = "Timeout cannot be less than -1. Provided: -10";
         validateTimeoutErrorCause(produceResult, expectedMessage, expectedCause);
     } else {
@@ -168,7 +168,7 @@ isolated function testNegativeTimeout() returns error? {
     }
     int|error consumeResult = pipe.consume(-10);
     if consumeResult is Error {
-        string expectedMessage = "Invalid consume timeout value provided";
+        string expectedMessage = "Invalid timeout value provided";
         string expectedCause = "Timeout cannot be less than -1. Provided: -10";
         validateTimeoutErrorCause(consumeResult, expectedMessage, expectedCause);
     } else {
@@ -176,7 +176,7 @@ isolated function testNegativeTimeout() returns error? {
     }
     stream<int, error?>|Error consumeStreamResult = pipe.consumeStream(-10);
     if consumeStreamResult is Error {
-        string expectedMessage = "Invalid consume timeout value provided";
+        string expectedMessage = "Invalid timeout value provided";
         string expectedCause = "Timeout cannot be less than -1. Provided: -10";
         validateTimeoutErrorCause(consumeStreamResult, expectedMessage, expectedCause);
     } else {
@@ -184,7 +184,7 @@ isolated function testNegativeTimeout() returns error? {
     }
     Error? closeResult = pipe.gracefulClose(-10);
     if closeResult is Error {
-        string expectedMessage = "Invalid graceful timeout value provided";
+        string expectedMessage = "Invalid timeout value provided";
         string expectedCause = "Timeout cannot be less than -1. Provided: -10";
         validateTimeoutErrorCause(closeResult, expectedMessage, expectedCause);
     } else {
