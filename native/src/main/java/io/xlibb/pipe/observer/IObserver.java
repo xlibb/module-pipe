@@ -11,9 +11,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 public interface IObserver {
 
     void onTimeout(BError bError);
+
     void onConsume(ConcurrentLinkedQueue<Object> queue, AtomicInteger queueSize);
+
     void onProduce(ConcurrentLinkedQueue<Object> queue, AtomicInteger queueSize);
+
     void onError(BError bError);
+
     void onSuccess(Object object);
+
     void onEmpty();
 }

@@ -10,13 +10,14 @@ public class ModuleUtils {
 
     private static Module module;
 
-    private ModuleUtils() {}
-
-    public static void setModule(Environment environment) {
-        module = environment.getCurrentModule();
+    private ModuleUtils() {
     }
 
     public static Module getModule() {
         return module;
+    }
+
+    public static void setModule(Environment environment) {
+        module = environment.getCurrentModule();
     }
 }

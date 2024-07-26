@@ -11,9 +11,9 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Observable class to notify observers when a change occurs.
  */
 public class Observable implements IObservable {
-    ArrayList<Callback> callbackList;
-    ConcurrentLinkedQueue<Object> queue;
-    AtomicInteger queueSize;
+    private final ArrayList<Callback> callbackList;
+    private final ConcurrentLinkedQueue<Object> queue;
+    private final AtomicInteger queueSize;
 
     public Observable(ConcurrentLinkedQueue<Object> queue, AtomicInteger queueSize) {
         this.callbackList = new ArrayList<>();

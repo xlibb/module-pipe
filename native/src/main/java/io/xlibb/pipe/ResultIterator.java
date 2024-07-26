@@ -34,7 +34,8 @@ public class ResultIterator {
     protected static final String CLOSED_PIPE_ERROR = "Attempting to close an already closed pipe";
     private static final String PRODUCE_TO_CLOSED_PIPE_ERROR = "Events cannot be consumed after the stream is closed";
 
-    private ResultIterator() {}
+    private ResultIterator() {
+    }
 
     public static Object nextValue(Environment env, BObject streamGenerator, BTypedesc typeParam) {
         Pipe pipe = (Pipe) streamGenerator.getNativeData(NATIVE_PIPE);

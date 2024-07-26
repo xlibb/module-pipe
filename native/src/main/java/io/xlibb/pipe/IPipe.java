@@ -23,5 +23,6 @@ import io.ballerina.runtime.api.values.BError;
  */
 public interface IPipe {
     public boolean isClosed();
+
     public BError immediateClose();
 }
