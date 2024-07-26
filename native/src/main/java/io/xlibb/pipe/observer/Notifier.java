@@ -8,8 +8,9 @@ import java.util.TimerTask;
  * Observable class for the observers waiting for the timeKeeper.
  */
 public class Notifier extends TimerTask {
-    Observable timeKeeper;
-    Callback callback;
+    private static final String OPERATION_TIMEOUT_ERROR = "Operation has timed out";
+    private final Observable timeKeeper;
+    private final Callback callback;
 
     public Notifier(Observable timeKeeper, Callback callback) {
         this.timeKeeper = timeKeeper;
@@ -21,6 +22,6 @@ public class Notifier extends TimerTask {
      */
     @Override
     public void run() {
-        this.timeKeeper.notifyObservers(Utils.createError("Operation has timed out"), this.callback);
+        this.timeKeeper.notifyObservers(Utils.createError(OPERATION_TIMEOUT_ERROR), this.callback);
     }
 }

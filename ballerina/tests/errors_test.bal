@@ -23,7 +23,7 @@ import ballerina/time;
 }
 function testPipeWithNullValues() returns error? {
     Pipe pipe = new(1);
-    string expectedValue = "Nil values cannot be produced to a pipe";
+    string expectedValue = "Nil values must not be produced to a pipe";
     Error? result = pipe.produce((), timeout = 5);
     test:assertTrue(result is Error);
     string actualValue = (<error>result).message();
@@ -56,11 +56,29 @@ function testTimeoutErrorsInConsume() returns error? {
 }
 
 @test:Config {
+    groups: ["errors"]
+}
+function testPipeStreamWithErrors() returns error? {
+    Pipe pipe = new(5);
+    MovieRecord movieRecord = {name: "The Trial of the Chicago 7", director: "Aaron Sorkin"};
+    check pipe.produce(movieRecord.cloneReadOnly(), timeout = 5);
+    stream<MovieRecord, error?> 'stream = check pipe.consumeStream(5);
+    record {|MovieRecord value;|}? 'record = check 'stream.next();
+    MovieRecord actualValue = (<record {|MovieRecord value;|}>'record).value;
+    MovieRecord expectedValue = movieRecord;
+    test:assertEquals(actualValue, expectedValue);
+    check pipe.produce("test", timeout = 5);
+    record {|MovieRecord value;|}|error? next = 'stream.next();
+    test:assertTrue(next is Error);
+    test:assertEquals((<Error>next).message(), "{ballerina}ConversionError");
+}
+
+@test:Config {
     groups: ["errors", "close"]
 }
 function testImmediateClosingOfClosedPipe() returns error? {
     Pipe pipe = new (1);
-    string expectedValue = "Closing of a closed pipe is not allowed";
+    string expectedValue = "Attempting to close an already closed pipe";
     check pipe.immediateClose();
     Error? immediateCloseResult = pipe.immediateClose();
     test:assertTrue(immediateCloseResult is Error);
@@ -73,7 +91,7 @@ function testImmediateClosingOfClosedPipe() returns error? {
 }
 function testGracefulClosingOfClosedPipe() returns error? {
     Pipe pipe = new (1);
-    string expectedValue = "Closing of a closed pipe is not allowed";
+    string expectedValue = "Attempting to close an already closed pipe";
     time:Utc currentUtc = time:utcNow();
     check pipe.gracefulClose();
     Error? gracefulCloseResult = pipe.gracefulClose();
@@ -89,7 +107,7 @@ function testGracefulClosingOfClosedPipe() returns error? {
 }
 function testClosingOfClosedStreamInPipe() returns error? {
     Pipe pipe = new (1);
-    string expectedValue = "Failed to close the stream";
+    string expectedValue = "Attempting to close an already closed pipe";
     check pipe.produce("data", timeout = 1);
     stream<string, error?> resultStream = check pipe.consumeStream(5);
     check resultStream.close();
@@ -100,7 +118,7 @@ function testClosingOfClosedStreamInPipe() returns error? {
 }
 
 @test:Config {
-    groups: ["main_apis"]
+    groups: ["errors"]
 }
 function testErrorsInPipesWithTimer() returns error? {
     Timer timeKeeper = new();
@@ -136,45 +154,45 @@ function testErrorsInPipesWithTimer() returns error? {
 }
 
 @test:Config {
-    groups: ["main_apis"]
+    groups: ["errors"]
 }
 isolated function testNegativeTimeout() returns error? {
     Pipe pipe = new(1);
     Error? produceResult = pipe.produce(1, -10);
     if produceResult is Error {
-        string expectedMessage = "Invalid produce timeout value provided";
-        string expectedCause = "Timeout cannot be less than -1. Provided: -10";
+        string expectedMessage = "Invalid timeout value provided";
+        string expectedCause = "Timeout must be -1 or greater. Provided: -10";
         validateTimeoutErrorCause(produceResult, expectedMessage, expectedCause);
     } else {
         test:assertFail("Expected an error");
     }
     int|error consumeResult = pipe.consume(-10);
     if consumeResult is Error {
-        string expectedMessage = "Invalid consume timeout value provided";
-        string expectedCause = "Timeout cannot be less than -1. Provided: -10";
+        string expectedMessage = "Invalid timeout value provided";
+        string expectedCause = "Timeout must be -1 or greater. Provided: -10";
         validateTimeoutErrorCause(consumeResult, expectedMessage, expectedCause);
     } else {
         test:assertFail("Expected an error");
     }
     stream<int, error?>|Error consumeStreamResult = pipe.consumeStream(-10);
     if consumeStreamResult is Error {
-        string expectedMessage = "Invalid consume timeout value provided";
-        string expectedCause = "Timeout cannot be less than -1. Provided: -10";
+        string expectedMessage = "Invalid timeout value provided";
+        string expectedCause = "Timeout must be -1 or greater. Provided: -10";
         validateTimeoutErrorCause(consumeStreamResult, expectedMessage, expectedCause);
     } else {
         test:assertFail("Expected an error");
     }
     Error? closeResult = pipe.gracefulClose(-10);
     if closeResult is Error {
-        string expectedMessage = "Invalid graceful timeout value provided";
-        string expectedCause = "Timeout cannot be less than -1. Provided: -10";
+        string expectedMessage = "Invalid timeout value provided";
+        string expectedCause = "Timeout must be -1 or greater. Provided: -10";
         validateTimeoutErrorCause(closeResult, expectedMessage, expectedCause);
     } else {
         test:assertFail("Expected an error");
     }
     closeResult = pipe.gracefulClose(-1);
     if closeResult is Error {
-        string expectedMessage = "Graceful close must provide 0 or greater timeout";
+        string expectedMessage = "Graceful close must provide a timeout of 0 or greater";
         test:assertEquals(closeResult.message(), expectedMessage);
     } else {
         test:assertFail("Expected an error");
@@ -182,14 +200,14 @@ isolated function testNegativeTimeout() returns error? {
 }
 
 @test:Config {
-    groups: ["main_apis"]
+    groups: ["errors"]
 }
 function testInfiniteWaiting() returns error? {
     Pipe pipe = new (1);
 
     worker A {
         foreach int i in 0..<3 {
-            var result = pipe.produce(i, -1);
+            Error? result = pipe.produce(i, -1);
             if result is Error {
                 test:assertFail("Unexpected error occurred");
             }

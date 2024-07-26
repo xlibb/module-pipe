@@ -3,6 +3,7 @@ package io.xlibb.pipe.observer;
 import io.ballerina.runtime.api.values.BError;
 
 import java.util.ArrayList;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -10,9 +11,9 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Observable class to notify observers when a change occurs.
  */
 public class Observable implements IObservable {
-    ArrayList<Callback> callbackList;
-    ConcurrentLinkedQueue<Object> queue;
-    AtomicInteger queueSize;
+    private final ArrayList<Callback> callbackList;
+    private final ConcurrentLinkedQueue<Object> queue;
+    private final AtomicInteger queueSize;
 
     public Observable(ConcurrentLinkedQueue<Object> queue, AtomicInteger queueSize) {
         this.callbackList = new ArrayList<>();
@@ -33,14 +34,16 @@ public class Observable implements IObservable {
     @Override
     public void notifyObservers(Object object) {
         if (!callbackList.isEmpty()) {
-            callbackList.remove(0).onProduce(this.queue, this.queueSize);
+            Callback callback = callbackList.remove(0);
+            Optional.ofNullable(callback).ifPresent(value -> value.onProduce(this.queue, this.queueSize));
         }
     }
 
     @Override
     public void notifyObservers() {
         if (!callbackList.isEmpty()) {
-            callbackList.remove(0).onConsume(this.queue, this.queueSize);
+            Callback callback = callbackList.remove(0);
+            Optional.ofNullable(callback).ifPresent(value -> value.onConsume(this.queue, this.queueSize));
         }
     }
 

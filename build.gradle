@@ -33,6 +33,18 @@ allprojects {
     repositories {
         mavenLocal()
         maven {
+            url = 'https://maven.wso2.org/nexus/content/repositories/releases/'
+        }
+
+        maven {
+            url = 'https://mvnrepository.com/artifact/org.testng/testng'
+        }
+
+        maven {
+            url = 'https://maven.wso2.org/nexus/content/groups/wso2-public/'
+        }
+
+        maven {
             url = 'https://repo.maven.apache.org/maven2'
         }
 

@@ -11,12 +11,12 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Callback class to get updated when a change occurs in Observables.
  */
 public class Callback implements IObserver {
-    Future future;
-    Observable timeKeeper;
-    Object event;
-    Observable observable;
-    Observable notifyObservable;
-    AtomicBoolean atomicUpdate;
+    private final Future future;
+    private final Observable timeKeeper;
+    private final Observable observable;
+    private final Observable notifyObservable;
+    private final AtomicBoolean atomicUpdate;
+    private Object event;
 
     public Callback(Future future, Observable observable, Observable timeKeeper, Observable notifyObservable) {
         this.future = future;
