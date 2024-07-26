@@ -57,10 +57,10 @@ import static io.xlibb.pipe.utils.Utils.createError;
 public class Pipe implements IPipe {
     private static final long INFINITE_WAIT = -1;
     private static final BDecimal MILLISECONDS_FACTOR = ValueCreator.createDecimalValue(new BigDecimal(1000));
-    private static final String PRODUCE_NIL_ERROR = "Nil values cannot be produced to a pipe";
-    private static final String PRODUCE_TO_CLOSED_PIPE = "Events cannot be produced to a closed pipe";
-    private static final String NEGATIVE_TIMEOUT_ERROR = "Graceful close must provide 0 or greater timeout";
-    private static final String TIMEOUT_ERROR = "Timeout cannot be less than -1. Provided: %s";
+    private static final String PRODUCE_NIL_ERROR = "Nil values must not be produced to a pipe";
+    private static final String PRODUCE_TO_CLOSED_PIPE = "Events must not be produced to a closed pipe";
+    private static final String NEGATIVE_TIMEOUT_ERROR = "Graceful close must provide a timeout of 0 or greater";
+    private static final String TIMEOUT_ERROR = "Timeout must be -1 or greater. Provided: %s";
     private static final String INVALID_TIMEOUT_ERROR = "Invalid timeout value provided";
     private ConcurrentLinkedQueue<Object> queue;
     private final AtomicInteger queueSize;

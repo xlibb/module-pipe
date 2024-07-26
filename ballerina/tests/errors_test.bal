@@ -23,7 +23,7 @@ import ballerina/time;
 }
 function testPipeWithNullValues() returns error? {
     Pipe pipe = new(1);
-    string expectedValue = "Nil values cannot be produced to a pipe";
+    string expectedValue = "Nil values must not be produced to a pipe";
     Error? result = pipe.produce((), timeout = 5);
     test:assertTrue(result is Error);
     string actualValue = (<error>result).message();
@@ -78,7 +78,7 @@ function testPipeStreamWithErrors() returns error? {
 }
 function testImmediateClosingOfClosedPipe() returns error? {
     Pipe pipe = new (1);
-    string expectedValue = "Attempting to close a closed pipe";
+    string expectedValue = "Attempting to close an already closed pipe";
     check pipe.immediateClose();
     Error? immediateCloseResult = pipe.immediateClose();
     test:assertTrue(immediateCloseResult is Error);
@@ -91,7 +91,7 @@ function testImmediateClosingOfClosedPipe() returns error? {
 }
 function testGracefulClosingOfClosedPipe() returns error? {
     Pipe pipe = new (1);
-    string expectedValue = "Attempting to close a closed pipe";
+    string expectedValue = "Attempting to close an already closed pipe";
     time:Utc currentUtc = time:utcNow();
     check pipe.gracefulClose();
     Error? gracefulCloseResult = pipe.gracefulClose();
@@ -107,7 +107,7 @@ function testGracefulClosingOfClosedPipe() returns error? {
 }
 function testClosingOfClosedStreamInPipe() returns error? {
     Pipe pipe = new (1);
-    string expectedValue = "Attempting to close a closed pipe";
+    string expectedValue = "Attempting to close an already closed pipe";
     check pipe.produce("data", timeout = 1);
     stream<string, error?> resultStream = check pipe.consumeStream(5);
     check resultStream.close();
@@ -161,7 +161,7 @@ isolated function testNegativeTimeout() returns error? {
     Error? produceResult = pipe.produce(1, -10);
     if produceResult is Error {
         string expectedMessage = "Invalid timeout value provided";
-        string expectedCause = "Timeout cannot be less than -1. Provided: -10";
+        string expectedCause = "Timeout must be -1 or greater. Provided: -10";
         validateTimeoutErrorCause(produceResult, expectedMessage, expectedCause);
     } else {
         test:assertFail("Expected an error");
@@ -169,7 +169,7 @@ isolated function testNegativeTimeout() returns error? {
     int|error consumeResult = pipe.consume(-10);
     if consumeResult is Error {
         string expectedMessage = "Invalid timeout value provided";
-        string expectedCause = "Timeout cannot be less than -1. Provided: -10";
+        string expectedCause = "Timeout must be -1 or greater. Provided: -10";
         validateTimeoutErrorCause(consumeResult, expectedMessage, expectedCause);
     } else {
         test:assertFail("Expected an error");
@@ -177,7 +177,7 @@ isolated function testNegativeTimeout() returns error? {
     stream<int, error?>|Error consumeStreamResult = pipe.consumeStream(-10);
     if consumeStreamResult is Error {
         string expectedMessage = "Invalid timeout value provided";
-        string expectedCause = "Timeout cannot be less than -1. Provided: -10";
+        string expectedCause = "Timeout must be -1 or greater. Provided: -10";
         validateTimeoutErrorCause(consumeStreamResult, expectedMessage, expectedCause);
     } else {
         test:assertFail("Expected an error");
@@ -185,14 +185,14 @@ isolated function testNegativeTimeout() returns error? {
     Error? closeResult = pipe.gracefulClose(-10);
     if closeResult is Error {
         string expectedMessage = "Invalid timeout value provided";
-        string expectedCause = "Timeout cannot be less than -1. Provided: -10";
+        string expectedCause = "Timeout must be -1 or greater. Provided: -10";
         validateTimeoutErrorCause(closeResult, expectedMessage, expectedCause);
     } else {
         test:assertFail("Expected an error");
     }
     closeResult = pipe.gracefulClose(-1);
     if closeResult is Error {
-        string expectedMessage = "Graceful close must provide 0 or greater timeout";
+        string expectedMessage = "Graceful close must provide a timeout of 0 or greater";
         test:assertEquals(closeResult.message(), expectedMessage);
     } else {
         test:assertFail("Expected an error");

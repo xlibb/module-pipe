@@ -62,7 +62,7 @@ function testPipeStream() returns error? {
         test:assertEquals(actualValue, expectedValue);
     }
     check 'stream.close();
-    string expectedValue = "Events cannot be produced to a closed pipe";
+    string expectedValue = "Events must not be produced to a closed pipe";
     Error? actualValue = pipe.produce("1", timeout = 5);
     test:assertTrue(actualValue is Error);
     test:assertEquals((<Error>actualValue).message(), expectedValue);
@@ -104,7 +104,7 @@ function testGracefulClose() returns error? {
     Pipe pipe = new(5);
     check pipe.produce("1", timeout = 5);
     check pipe.gracefulClose(timeout = 5);
-    string expectedValue = "Events cannot be produced to a closed pipe";
+    string expectedValue = "Events must not be produced to a closed pipe";
     Error? actualValue = pipe.produce("1", timeout = 5);
     test:assertTrue(actualValue is Error);
     test:assertEquals((<Error>actualValue).message(), expectedValue);

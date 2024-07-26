@@ -31,7 +31,7 @@ import static io.xlibb.pipe.utils.Utils.createError;
  * Java implementation for the APIs of the stream returned from the pipe.
  */
 public class ResultIterator {
-    protected static final String CLOSED_PIPE_ERROR = "Attempting to close a closed pipe";
+    protected static final String CLOSED_PIPE_ERROR = "Attempting to close an already closed pipe";
     private static final String PRODUCE_TO_CLOSED_PIPE_ERROR = "Events cannot be consumed after the stream is closed";
 
     private ResultIterator() {}
