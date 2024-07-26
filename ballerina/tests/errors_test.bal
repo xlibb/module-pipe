@@ -118,7 +118,7 @@ function testClosingOfClosedStreamInPipe() returns error? {
 }
 
 @test:Config {
-    groups: ["main_apis"]
+    groups: ["errors"]
 }
 function testErrorsInPipesWithTimer() returns error? {
     Timer timeKeeper = new();
@@ -154,7 +154,7 @@ function testErrorsInPipesWithTimer() returns error? {
 }
 
 @test:Config {
-    groups: ["main_apis"]
+    groups: ["errors"]
 }
 isolated function testNegativeTimeout() returns error? {
     Pipe pipe = new(1);
@@ -200,14 +200,14 @@ isolated function testNegativeTimeout() returns error? {
 }
 
 @test:Config {
-    groups: ["main_apis"]
+    groups: ["errors"]
 }
 function testInfiniteWaiting() returns error? {
     Pipe pipe = new (1);
 
     worker A {
         foreach int i in 0..<3 {
-            var result = pipe.produce(i, -1);
+            Error? result = pipe.produce(i, -1);
             if result is Error {
                 test:assertFail("Unexpected error occurred");
             }
