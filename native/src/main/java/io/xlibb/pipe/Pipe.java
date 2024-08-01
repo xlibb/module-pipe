@@ -41,6 +41,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static io.xlibb.pipe.ResultIterator.CLOSED_PIPE_ERROR;
+import static io.xlibb.pipe.WorkerThreadPool.PIPE_EXECUTOR_SERVICE;
 import static io.xlibb.pipe.utils.ModuleUtils.getModule;
 import static io.xlibb.pipe.utils.Utils.NATIVE_PIPE;
 import static io.xlibb.pipe.utils.Utils.NATIVE_PIPE_OBJECT;
@@ -115,7 +116,7 @@ public class Pipe implements IPipe {
             Pipe nativePipe = (Pipe) handle.getValue();
             Callback observer = new Callback(future, nativePipe.getConsumer(), nativePipe.getTimeKeeper(),
                     nativePipe.getProducer());
-            nativePipe.asyncProduce(observer, event, timeoutInMillis);
+            PIPE_EXECUTOR_SERVICE.execute(() -> nativePipe.asyncProduce(observer, event, timeoutInMillis));
         } catch (BError bError) {
             future.complete(createError(INVALID_TIMEOUT_ERROR, bError));
         } catch (Exception e) {
@@ -132,7 +133,9 @@ public class Pipe implements IPipe {
             Pipe nativePipe = (Pipe) handle.getValue();
             Callback observer = new Callback(future, nativePipe.getProducer(), nativePipe.getTimeKeeper(),
                     nativePipe.getConsumer());
-            nativePipe.asyncConsume(observer, timeoutInMillis, typeParam.getDescribingType());
+            PIPE_EXECUTOR_SERVICE.execute(() -> {
+                nativePipe.asyncConsume(observer, timeoutInMillis, typeParam.getDescribingType());
+            });
         } catch (BError bError) {
             future.complete(createError(INVALID_TIMEOUT_ERROR, bError));
         } catch (Exception e) {
@@ -148,7 +151,7 @@ public class Pipe implements IPipe {
             BHandle handle = (BHandle) pipe.get(NATIVE_PIPE_OBJECT);
             Pipe nativePipe = (Pipe) handle.getValue();
             Callback observer = new Callback(future, null, null, null);
-            nativePipe.asyncClose(observer, timeoutInMillis);
+            PIPE_EXECUTOR_SERVICE.execute(() -> nativePipe.asyncClose(observer, timeoutInMillis));
         } catch (BError bError) {
             future.complete(createError(INVALID_TIMEOUT_ERROR, bError));
         } catch (Exception e) {
