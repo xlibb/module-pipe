@@ -196,7 +196,7 @@ public class Pipe implements IPipe {
             return;
         }
         synchronized (this.consumeLock) {
-            if (this.queueSize.get() == 0 || queue.isEmpty()) {
+            if (this.queueSize.get() == 0) {
                 this.emptyQueue.notifyObservers(true);
                 this.producer.registerObserver(callback);
                 this.scheduleAction(callback, timeout);
