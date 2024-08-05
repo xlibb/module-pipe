@@ -16,28 +16,24 @@
  * under the License.
  */
 
-package io.xlibb.pipe;
+package io.xlibb.pipe.thread;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Class to hold the static cachedThreadPool for the Pipe package.
  */
 public class WorkerThreadPool {
-    private final static String THREAD_NAME = "bal-pipe-thread";
+    private static final String THREAD_NAME = "bal-pipe-thread";
+    public static final String BALLERINA_SQL_MAX_POOL_SIZE = "BALLERINA_SQL_MAX_POOL_SIZE";
+    public static final int MAX_POOL_SIZE = Integer.parseInt(
+            System.getenv(BALLERINA_SQL_MAX_POOL_SIZE) != null ? System.getenv(BALLERINA_SQL_MAX_POOL_SIZE) : "50"
+    );
 
     private WorkerThreadPool() {
     }
 
-    // This is similar to cachedThreadPool util from Executors.newCachedThreadPool(..); but with upper cap on threads
-    public static final ExecutorService PIPE_EXECUTOR_SERVICE = new ThreadPoolExecutor(0, 50,
-            60L, TimeUnit.SECONDS, new SynchronousQueue<>(), new PipeThreadFactory());
-
-    static class PipeThreadFactory implements ThreadFactory {
+    public static class PipeThreadFactory implements ThreadFactory {
         @Override
         public Thread newThread(Runnable runnable) {
             Thread ballerinaPipe = new Thread(runnable);
