@@ -60,7 +60,7 @@ import static io.xlibb.pipe.utils.Utils.createError;
 /**
  * Provide APIs to exchange events concurrently.
  */
-public class Pipe implements IPipe {
+public class Pipe {
     private static final BDecimal MILLISECONDS_FACTOR = ValueCreator.createDecimalValue(new BigDecimal(1000));
     private static final ExecutorService PIPE_EXECUTOR_SERVICE = new ThreadPoolExecutor(0, MAX_POOL_SIZE,
             60L, TimeUnit.SECONDS, new SynchronousQueue<>(), new WorkerThreadPool.PipeThreadFactory());
@@ -223,18 +223,20 @@ public class Pipe implements IPipe {
         }
     }
 
-    @Override
-    public boolean isClosed() {
-        return this.isClosed.get();
+    public static boolean isClosed(BObject pipe) {
+        BHandle handle = (BHandle) pipe.get(NATIVE_PIPE_OBJECT);
+        Pipe nativePipe = (Pipe) handle.getValue();
+        return nativePipe.getIsClosed().get();
     }
 
-    @Override
-    public BError immediateClose() {
-        if (this.isClosed.get()) {
+    public static BError immediateClose(BObject pipe) {
+        BHandle handle = (BHandle) pipe.get(NATIVE_PIPE_OBJECT);
+        Pipe nativePipe = (Pipe) handle.getValue();
+        if (nativePipe.getIsClosed().get()) {
             return createError(CLOSED_PIPE_ERROR);
         }
-        this.isClosed.compareAndSet(false, true);
-        this.queue = null;
+        nativePipe.getIsClosed().compareAndSet(false, true);
+        nativePipe.nullifyQueue();
         return null;
     }
 
@@ -281,5 +283,13 @@ public class Pipe implements IPipe {
 
     protected Observable getTimeKeeper() {
         return timeKeeper;
+    }
+
+    protected AtomicBoolean getIsClosed() {
+        return this.isClosed;
+    }
+
+    protected void nullifyQueue() {
+        this.queue = null;
     }
 }

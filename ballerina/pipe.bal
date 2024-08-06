@@ -70,11 +70,9 @@ public isolated class Pipe {
 
     # Closes the pipe instantly.
     # + return - Return `()`, if the pipe is successfully closed. Otherwise returns a `pipe:Error`
-    public isolated function immediateClose() returns Error? {
-        lock {
-            check immediateClose(self.nativePipeObject);
-        }
-    }
+    public isolated function immediateClose() returns Error? = @java:Method {
+        'class: "io.xlibb.pipe.Pipe"
+    } external;
 
     # Closes the pipe gracefully. Waits for some grace period until all the events in the pipe is consumed.
     #
@@ -88,11 +86,9 @@ public isolated class Pipe {
     # Checks whether the pipe is closed.
     #
     # + return - Returns `true`, if the pipe is closed. Otherwise returns `false`
-    public isolated function isClosed() returns boolean {
-        lock {
-            return isClosed(self.nativePipeObject);
-        }
-    }
+    public isolated function isClosed() returns boolean = @java:Method {
+        'class: "io.xlibb.pipe.Pipe"
+    } external;
 }
 
 isolated function newPipe(int 'limit) returns handle = @java:Constructor {
@@ -103,10 +99,3 @@ isolated function newPipeWithTimer(int 'limit, Timer timer) returns handle = @ja
     'class: "io.xlibb.pipe.Pipe"
 } external;
 
-isolated function immediateClose(handle pipe) returns Error? = @java:Method {
-    'class: "io.xlibb.pipe.Pipe"
-} external;
-
-isolated function isClosed(handle pipe) returns boolean = @java:Method {
-    'class: "io.xlibb.pipe.Pipe"
-} external;
