@@ -25,9 +25,9 @@ import java.util.concurrent.ThreadFactory;
  */
 public class WorkerThreadPool {
     private static final String THREAD_NAME = "bal-pipe-thread";
-    public static final String BALLERINA_SQL_MAX_POOL_SIZE = "BALLERINA_SQL_MAX_POOL_SIZE";
+    public static final String BALLERINA_PIPE_MAX_POOL_SIZE = "BALLERINA_PIPE_MAX_POOL_SIZE";
     public static final int MAX_POOL_SIZE = Integer.parseInt(
-            System.getenv(BALLERINA_SQL_MAX_POOL_SIZE) != null ? System.getenv(BALLERINA_SQL_MAX_POOL_SIZE) : "50"
+            System.getenv(BALLERINA_PIPE_MAX_POOL_SIZE) != null ? System.getenv(BALLERINA_PIPE_MAX_POOL_SIZE) : "50"
     );
 
     private WorkerThreadPool() {
