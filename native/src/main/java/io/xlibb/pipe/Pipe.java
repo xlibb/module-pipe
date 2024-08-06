@@ -49,7 +49,6 @@ import static io.xlibb.pipe.ResultIterator.CLOSED_PIPE_ERROR;
 import static io.xlibb.pipe.thread.WorkerThreadPool.MAX_POOL_SIZE;
 import static io.xlibb.pipe.utils.ModuleUtils.getModule;
 import static io.xlibb.pipe.utils.Utils.NATIVE_PIPE;
-import static io.xlibb.pipe.utils.Utils.NATIVE_PIPE_OBJECT;
 import static io.xlibb.pipe.utils.Utils.NATIVE_TIMER_OBJECT;
 import static io.xlibb.pipe.utils.Utils.RESULT_ITERATOR;
 import static io.xlibb.pipe.utils.Utils.STREAM_GENERATOR;
@@ -70,6 +69,7 @@ public class Pipe {
     private static final String TIMEOUT_ERROR = "Timeout must be -1 or greater. Provided: %s";
     private static final String INVALID_TIMEOUT_ERROR = "Invalid timeout value provided";
     private static final long INFINITE_WAIT = -1;
+    public static final String PIPE_OBJECT = "nativePipeObject";
     private final AtomicBoolean isClosed;
     private final AtomicInteger queueSize;
     private final Long limit;
@@ -98,6 +98,14 @@ public class Pipe {
         this.timeKeeper = new Observable(null, null);
     }
 
+    public static void generatePipeWithTimer(BObject pipe, Long limit, BObject timer) {
+        pipe.addNativeData("nativePipeObject", new Pipe(limit, timer));
+    }
+
+    public static void generatePipe(BObject pipe, Long limit) {
+        pipe.addNativeData("nativePipeObject", new Pipe(limit));
+    }
+
     public static Object consumeStream(BObject pipe, BDecimal timeout, BTypedesc typeParam) {
         long timeoutInMillis;
         try {
@@ -108,8 +116,7 @@ public class Pipe {
         UnionType typeUnion = TypeCreator.createUnionType(PredefinedTypes.TYPE_NULL, PredefinedTypes.TYPE_ERROR);
         BObject resultIterator = ValueCreator.createObjectValue(getModule(), RESULT_ITERATOR, typeParam);
         BObject streamGenerator = ValueCreator.createObjectValue(getModule(), STREAM_GENERATOR, resultIterator);
-        BHandle handle = (BHandle) pipe.get(NATIVE_PIPE_OBJECT);
-        streamGenerator.addNativeData(NATIVE_PIPE, handle.getValue());
+        streamGenerator.addNativeData(NATIVE_PIPE, pipe.getNativeData(PIPE_OBJECT));
         streamGenerator.addNativeData(TIME_OUT, timeoutInMillis);
         return ValueCreator.createStreamValue(TypeCreator.createStreamType(typeParam.getDescribingType(), typeUnion),
                 streamGenerator);
@@ -119,8 +126,7 @@ public class Pipe {
         Future future = env.markAsync();
         try {
             long timeoutInMillis = getTimeoutInMillis(timeout);
-            BHandle handle = (BHandle) pipe.get(NATIVE_PIPE_OBJECT);
-            Pipe nativePipe = (Pipe) handle.getValue();
+            Pipe nativePipe = (Pipe) pipe.getNativeData(PIPE_OBJECT);
             Callback observer = new Callback(future, nativePipe.getConsumer(), nativePipe.getTimeKeeper(),
                     nativePipe.getProducer());
             PIPE_EXECUTOR_SERVICE.execute(() -> nativePipe.asyncProduce(observer, event, timeoutInMillis));
@@ -136,8 +142,7 @@ public class Pipe {
         Future future = env.markAsync();
         try {
             long timeoutInMillis = getTimeoutInMillis(timeout);
-            BHandle handle = (BHandle) pipe.get(NATIVE_PIPE_OBJECT);
-            Pipe nativePipe = (Pipe) handle.getValue();
+            Pipe nativePipe = (Pipe) pipe.getNativeData(PIPE_OBJECT);
             Callback observer = new Callback(future, nativePipe.getProducer(), nativePipe.getTimeKeeper(),
                     nativePipe.getConsumer());
             PIPE_EXECUTOR_SERVICE.execute(() -> {
@@ -155,8 +160,7 @@ public class Pipe {
         Future future = env.markAsync();
         try {
             long timeoutInMillis = getTimeoutInMillis(timeout);
-            BHandle handle = (BHandle) pipe.get(NATIVE_PIPE_OBJECT);
-            Pipe nativePipe = (Pipe) handle.getValue();
+            Pipe nativePipe = (Pipe) pipe.getNativeData(PIPE_OBJECT);
             Callback observer = new Callback(future, null, null, null);
             PIPE_EXECUTOR_SERVICE.execute(() -> nativePipe.asyncClose(observer, timeoutInMillis));
         } catch (BError bError) {
@@ -224,14 +228,12 @@ public class Pipe {
     }
 
     public static boolean isClosed(BObject pipe) {
-        BHandle handle = (BHandle) pipe.get(NATIVE_PIPE_OBJECT);
-        Pipe nativePipe = (Pipe) handle.getValue();
+        Pipe nativePipe = (Pipe) pipe.getNativeData(PIPE_OBJECT);
         return nativePipe.getIsClosed().get();
     }
 
     public static BError immediateClose(BObject pipe) {
-        BHandle handle = (BHandle) pipe.get(NATIVE_PIPE_OBJECT);
-        Pipe nativePipe = (Pipe) handle.getValue();
+        Pipe nativePipe = (Pipe) pipe.getNativeData(PIPE_OBJECT);
         if (nativePipe.getIsClosed().get()) {
             return createError(CLOSED_PIPE_ERROR);
         }

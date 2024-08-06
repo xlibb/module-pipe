@@ -18,7 +18,6 @@ import ballerina/jballerina.java;
 
 # Consists of APIs to exchange events concurrently.
 public isolated class Pipe {
-    private handle nativePipeObject;
 
     # Creates a new `pipe:Pipe` instance.
     #
@@ -26,11 +25,21 @@ public isolated class Pipe {
     # + timer - The timer that used to keep track of time to notify the timeouts in APIs
     public isolated function init(int 'limit, Timer? timer = ()) {
         if timer is Timer {
-            self.nativePipeObject = newPipeWithTimer('limit, timer);
+            self.generatePipeWithTimer('limit, timer);
         } else {
-            self.nativePipeObject = newPipe('limit);
+            self.generatePipe('limit);
         }
     }
+
+    public isolated function generatePipe(int 'limit) = @java:Method {
+        'class: "io.xlibb.pipe.Pipe",
+        paramTypes: ["java.lang.Long"]
+    } external;
+    
+    public isolated function generatePipeWithTimer(int 'limit, Timer timer) = @java:Method {
+        'class: "io.xlibb.pipe.Pipe",
+        paramTypes: ["java.lang.Long", "io.ballerina.runtime.api.values.BObject"]
+    } external;
 
     # Produces an event into the pipe.
     #
