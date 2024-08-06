@@ -99,11 +99,11 @@ public class Pipe {
     }
 
     public static void generatePipeWithTimer(BObject pipe, Long limit, BObject timer) {
-        pipe.addNativeData("nativePipeObject", new Pipe(limit, timer));
+        pipe.addNativeData(PIPE_OBJECT, new Pipe(limit, timer));
     }
 
     public static void generatePipe(BObject pipe, Long limit) {
-        pipe.addNativeData("nativePipeObject", new Pipe(limit));
+        pipe.addNativeData(PIPE_OBJECT, new Pipe(limit));
     }
 
     public static Object consumeStream(BObject pipe, BDecimal timeout, BTypedesc typeParam) {
