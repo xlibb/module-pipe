@@ -54,11 +54,11 @@ public class Callback implements IObserver {
     @Override
     public void onProduce(ConcurrentLinkedQueue<Object> queue, AtomicInteger queueSize) {
         if (atomicUpdate.compareAndSet(false, true)) {
-            onSuccess(queue.remove());
             queueSize.decrementAndGet();
             this.notifyObservable.notifyObservers();
             this.observable.unregisterObserver(this);
             this.timeKeeper.unregisterObserver(this);
+            onSuccess(queue.remove());
         }
     }
 

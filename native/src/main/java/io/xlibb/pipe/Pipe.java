@@ -32,18 +32,23 @@ import io.ballerina.runtime.api.values.BTypedesc;
 import io.xlibb.pipe.observer.Callback;
 import io.xlibb.pipe.observer.Notifier;
 import io.xlibb.pipe.observer.Observable;
+import io.xlibb.pipe.thread.WorkerThreadPool;
 
 import java.math.BigDecimal;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static io.xlibb.pipe.ResultIterator.CLOSED_PIPE_ERROR;
+import static io.xlibb.pipe.thread.WorkerThreadPool.MAX_POOL_SIZE;
 import static io.xlibb.pipe.utils.ModuleUtils.getModule;
 import static io.xlibb.pipe.utils.Utils.NATIVE_PIPE;
-import static io.xlibb.pipe.utils.Utils.NATIVE_PIPE_OBJECT;
 import static io.xlibb.pipe.utils.Utils.NATIVE_TIMER_OBJECT;
 import static io.xlibb.pipe.utils.Utils.RESULT_ITERATOR;
 import static io.xlibb.pipe.utils.Utils.STREAM_GENERATOR;
@@ -54,14 +59,18 @@ import static io.xlibb.pipe.utils.Utils.createError;
 /**
  * Provide APIs to exchange events concurrently.
  */
-public class Pipe implements IPipe {
+public class Pipe {
     private static final BDecimal MILLISECONDS_FACTOR = ValueCreator.createDecimalValue(new BigDecimal(1000));
+    private static final ExecutorService PIPE_EXECUTOR_SERVICE = new ThreadPoolExecutor(0, MAX_POOL_SIZE,
+            60L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(), new WorkerThreadPool.PipeThreadFactory(),
+            new ThreadPoolExecutor.CallerRunsPolicy());
     private static final String PRODUCE_NIL_ERROR = "Nil values must not be produced to a pipe";
     private static final String PRODUCE_TO_CLOSED_PIPE = "Events must not be produced to a closed pipe";
     private static final String NEGATIVE_TIMEOUT_ERROR = "Graceful close must provide a timeout of 0 or greater";
     private static final String TIMEOUT_ERROR = "Timeout must be -1 or greater. Provided: %s";
     private static final String INVALID_TIMEOUT_ERROR = "Invalid timeout value provided";
     private static final long INFINITE_WAIT = -1;
+    public static final String PIPE_OBJECT = "nativePipeObject";
     private final AtomicBoolean isClosed;
     private final AtomicInteger queueSize;
     private final Long limit;
@@ -90,6 +99,14 @@ public class Pipe implements IPipe {
         this.timeKeeper = new Observable(null, null);
     }
 
+    public static void generatePipeWithTimer(BObject pipe, Long limit, BObject timer) {
+        pipe.addNativeData(PIPE_OBJECT, new Pipe(limit, timer));
+    }
+
+    public static void generatePipe(BObject pipe, Long limit) {
+        pipe.addNativeData(PIPE_OBJECT, new Pipe(limit));
+    }
+
     public static Object consumeStream(BObject pipe, BDecimal timeout, BTypedesc typeParam) {
         long timeoutInMillis;
         try {
@@ -100,8 +117,7 @@ public class Pipe implements IPipe {
         UnionType typeUnion = TypeCreator.createUnionType(PredefinedTypes.TYPE_NULL, PredefinedTypes.TYPE_ERROR);
         BObject resultIterator = ValueCreator.createObjectValue(getModule(), RESULT_ITERATOR, typeParam);
         BObject streamGenerator = ValueCreator.createObjectValue(getModule(), STREAM_GENERATOR, resultIterator);
-        BHandle handle = (BHandle) pipe.get(NATIVE_PIPE_OBJECT);
-        streamGenerator.addNativeData(NATIVE_PIPE, handle.getValue());
+        streamGenerator.addNativeData(NATIVE_PIPE, pipe.getNativeData(PIPE_OBJECT));
         streamGenerator.addNativeData(TIME_OUT, timeoutInMillis);
         return ValueCreator.createStreamValue(TypeCreator.createStreamType(typeParam.getDescribingType(), typeUnion),
                 streamGenerator);
@@ -111,11 +127,10 @@ public class Pipe implements IPipe {
         Future future = env.markAsync();
         try {
             long timeoutInMillis = getTimeoutInMillis(timeout);
-            BHandle handle = (BHandle) pipe.get(NATIVE_PIPE_OBJECT);
-            Pipe nativePipe = (Pipe) handle.getValue();
+            Pipe nativePipe = (Pipe) pipe.getNativeData(PIPE_OBJECT);
             Callback observer = new Callback(future, nativePipe.getConsumer(), nativePipe.getTimeKeeper(),
                     nativePipe.getProducer());
-            nativePipe.asyncProduce(observer, event, timeoutInMillis);
+            PIPE_EXECUTOR_SERVICE.execute(() -> nativePipe.asyncProduce(observer, event, timeoutInMillis));
         } catch (BError bError) {
             future.complete(createError(INVALID_TIMEOUT_ERROR, bError));
         } catch (Exception e) {
@@ -128,11 +143,12 @@ public class Pipe implements IPipe {
         Future future = env.markAsync();
         try {
             long timeoutInMillis = getTimeoutInMillis(timeout);
-            BHandle handle = (BHandle) pipe.get(NATIVE_PIPE_OBJECT);
-            Pipe nativePipe = (Pipe) handle.getValue();
+            Pipe nativePipe = (Pipe) pipe.getNativeData(PIPE_OBJECT);
             Callback observer = new Callback(future, nativePipe.getProducer(), nativePipe.getTimeKeeper(),
                     nativePipe.getConsumer());
-            nativePipe.asyncConsume(observer, timeoutInMillis, typeParam.getDescribingType());
+            PIPE_EXECUTOR_SERVICE.execute(() -> {
+                nativePipe.asyncConsume(observer, timeoutInMillis, typeParam.getDescribingType());
+            });
         } catch (BError bError) {
             future.complete(createError(INVALID_TIMEOUT_ERROR, bError));
         } catch (Exception e) {
@@ -145,10 +161,9 @@ public class Pipe implements IPipe {
         Future future = env.markAsync();
         try {
             long timeoutInMillis = getTimeoutInMillis(timeout);
-            BHandle handle = (BHandle) pipe.get(NATIVE_PIPE_OBJECT);
-            Pipe nativePipe = (Pipe) handle.getValue();
+            Pipe nativePipe = (Pipe) pipe.getNativeData(PIPE_OBJECT);
             Callback observer = new Callback(future, null, null, null);
-            nativePipe.asyncClose(observer, timeoutInMillis);
+            PIPE_EXECUTOR_SERVICE.execute(() -> nativePipe.asyncClose(observer, timeoutInMillis));
         } catch (BError bError) {
             future.complete(createError(INVALID_TIMEOUT_ERROR, bError));
         } catch (Exception e) {
@@ -196,7 +211,7 @@ public class Pipe implements IPipe {
             return;
         }
         synchronized (this.consumeLock) {
-            if (this.queueSize.get() == 0 || queue.isEmpty()) {
+            if (this.queueSize.get() == 0) {
                 this.emptyQueue.notifyObservers(true);
                 this.producer.registerObserver(callback);
                 this.scheduleAction(callback, timeout);
@@ -213,18 +228,18 @@ public class Pipe implements IPipe {
         }
     }
 
-    @Override
-    public boolean isClosed() {
-        return this.isClosed.get();
+    public static boolean isClosed(BObject pipe) {
+        Pipe nativePipe = (Pipe) pipe.getNativeData(PIPE_OBJECT);
+        return nativePipe.getIsClosed().get();
     }
 
-    @Override
-    public BError immediateClose() {
-        if (this.isClosed.get()) {
+    public static BError immediateClose(BObject pipe) {
+        Pipe nativePipe = (Pipe) pipe.getNativeData(PIPE_OBJECT);
+        if (nativePipe.getIsClosed().get()) {
             return createError(CLOSED_PIPE_ERROR);
         }
-        this.isClosed.compareAndSet(false, true);
-        this.queue = null;
+        nativePipe.getIsClosed().compareAndSet(false, true);
+        nativePipe.nullifyQueue();
         return null;
     }
 
@@ -271,5 +286,13 @@ public class Pipe implements IPipe {
 
     protected Observable getTimeKeeper() {
         return timeKeeper;
+    }
+
+    protected AtomicBoolean getIsClosed() {
+        return this.isClosed;
+    }
+
+    protected void nullifyQueue() {
+        this.queue = null;
     }
 }
