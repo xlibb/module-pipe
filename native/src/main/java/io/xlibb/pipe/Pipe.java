@@ -66,8 +66,7 @@ public class Pipe {
     private final AtomicBoolean isClosed;
     private final AtomicInteger queueSize;
     private final Long limit;
-    private final Object consumeLock = new Object();
-    private final Object produceLock = new Object();
+    private final ReentrantLock pipeLock = new ReentrantLock();
     private final Observable consumer;
     private final Observable emptyQueue;
     private final Observable producer;
@@ -182,40 +181,50 @@ public class Pipe {
             callback.onError(createError(PRODUCE_TO_CLOSED_PIPE));
             return;
         }
-        synchronized (this.produceLock) {
+        this.pipeLock.lock();
+        try {
             if (this.queueSize.get() == this.limit) {
                 callback.setEvent(event);
                 this.consumer.registerObserver(callback);
                 this.scheduleAction(callback, timeout);
             } else {
-                queue.add(event);
                 queueSize.incrementAndGet();
-                this.producer.notifyObservers(event);
+                queue.add(event);
+                this.producer.notifyObservers(event, this.pipeLock);
                 callback.onSuccess(null);
             }
+        } catch (Exception e) {
+            callback.onError(createError(e.getMessage()));
+        } finally {
+            this.pipeLock.unlock();
         }
     }
 
     protected void asyncConsume(Callback callback, long timeout, Type type) {
-        if (this.queue == null) {
-            callback.onSuccess(null);
+        if (this.isClosed.get()) {
+            callback.onError(createError(CONSUME_FROM_CLOSED_PIPE));
             return;
         }
-        synchronized (this.consumeLock) {
+        this.pipeLock.lock();
+        try {
             if (this.queueSize.get() == 0) {
                 this.emptyQueue.notifyObservers(true);
                 this.producer.registerObserver(callback);
                 this.scheduleAction(callback, timeout);
             } else {
+                queueSize.decrementAndGet();
+                Object value = queue.remove();
+                this.consumer.notifyObservers(this.pipeLock);
                 try {
-                    queueSize.decrementAndGet();
-                    this.consumer.notifyObservers();
-                    Object value = ValueUtils.convert(queue.remove(), type);
-                    callback.onSuccess(value);
+                    callback.onSuccess(ValueUtils.convert(value, type));
                 } catch (Exception e) {
                     callback.onError(createError(e.getMessage()));
                 }
             }
+        } catch (Exception e) {
+            callback.onError(createError(e.getMessage()));
+        } finally {
+            this.pipeLock.unlock();
         }
     }
 
