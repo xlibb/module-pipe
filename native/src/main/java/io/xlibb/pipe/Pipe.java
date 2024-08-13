@@ -32,21 +32,16 @@ import io.ballerina.runtime.api.values.BTypedesc;
 import io.xlibb.pipe.observer.Callback;
 import io.xlibb.pipe.observer.Notifier;
 import io.xlibb.pipe.observer.Observable;
-import io.xlibb.pipe.thread.WorkerThreadPool;
 
 import java.math.BigDecimal;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static io.xlibb.pipe.ResultIterator.CLOSED_PIPE_ERROR;
-import static io.xlibb.pipe.thread.WorkerThreadPool.MAX_POOL_SIZE;
 import static io.xlibb.pipe.utils.ModuleUtils.getModule;
 import static io.xlibb.pipe.utils.Utils.NATIVE_PIPE;
 import static io.xlibb.pipe.utils.Utils.NATIVE_TIMER_OBJECT;
@@ -61,9 +56,6 @@ import static io.xlibb.pipe.utils.Utils.createError;
  */
 public class Pipe {
     private static final BDecimal MILLISECONDS_FACTOR = ValueCreator.createDecimalValue(new BigDecimal(1000));
-    private static final ExecutorService PIPE_EXECUTOR_SERVICE = new ThreadPoolExecutor(0, MAX_POOL_SIZE,
-            60L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(), new WorkerThreadPool.PipeThreadFactory(),
-            new ThreadPoolExecutor.CallerRunsPolicy());
     private static final String PRODUCE_NIL_ERROR = "Nil values must not be produced to a pipe";
     private static final String PRODUCE_TO_CLOSED_PIPE = "Events must not be produced to a closed pipe";
     private static final String NEGATIVE_TIMEOUT_ERROR = "Graceful close must provide a timeout of 0 or greater";
@@ -130,7 +122,7 @@ public class Pipe {
             Pipe nativePipe = (Pipe) pipe.getNativeData(PIPE_OBJECT);
             Callback observer = new Callback(future, nativePipe.getConsumer(), nativePipe.getTimeKeeper(),
                     nativePipe.getProducer());
-            PIPE_EXECUTOR_SERVICE.execute(() -> nativePipe.asyncProduce(observer, event, timeoutInMillis));
+            nativePipe.asyncProduce(observer, event, timeoutInMillis);
         } catch (BError bError) {
             future.complete(createError(INVALID_TIMEOUT_ERROR, bError));
         } catch (Exception e) {
@@ -146,9 +138,8 @@ public class Pipe {
             Pipe nativePipe = (Pipe) pipe.getNativeData(PIPE_OBJECT);
             Callback observer = new Callback(future, nativePipe.getProducer(), nativePipe.getTimeKeeper(),
                     nativePipe.getConsumer());
-            PIPE_EXECUTOR_SERVICE.execute(() -> {
-                nativePipe.asyncConsume(observer, timeoutInMillis, typeParam.getDescribingType());
-            });
+            observer.setType(typeParam.getDescribingType());
+            nativePipe.asyncConsume(observer, timeoutInMillis, typeParam.getDescribingType());
         } catch (BError bError) {
             future.complete(createError(INVALID_TIMEOUT_ERROR, bError));
         } catch (Exception e) {
@@ -163,7 +154,7 @@ public class Pipe {
             long timeoutInMillis = getTimeoutInMillis(timeout);
             Pipe nativePipe = (Pipe) pipe.getNativeData(PIPE_OBJECT);
             Callback observer = new Callback(future, null, null, null);
-            PIPE_EXECUTOR_SERVICE.execute(() -> nativePipe.asyncClose(observer, timeoutInMillis));
+            nativePipe.asyncClose(observer, timeoutInMillis);
         } catch (BError bError) {
             future.complete(createError(INVALID_TIMEOUT_ERROR, bError));
         } catch (Exception e) {
