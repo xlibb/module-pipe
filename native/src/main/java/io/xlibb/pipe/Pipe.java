@@ -58,6 +58,7 @@ public class Pipe {
     private static final BDecimal MILLISECONDS_FACTOR = ValueCreator.createDecimalValue(new BigDecimal(1000));
     private static final String PRODUCE_NIL_ERROR = "Nil values must not be produced to a pipe";
     private static final String PRODUCE_TO_CLOSED_PIPE = "Events must not be produced to a closed pipe";
+    private static final String CONSUME_FROM_CLOSED_PIPE = "Events must not be consumed from a closed pipe";
     private static final String NEGATIVE_TIMEOUT_ERROR = "Graceful close must provide a timeout of 0 or greater";
     private static final String TIMEOUT_ERROR = "Timeout must be -1 or greater. Provided: %s";
     private static final String INVALID_TIMEOUT_ERROR = "Invalid timeout value provided";
@@ -246,7 +247,7 @@ public class Pipe {
     protected void asyncClose(Callback callback, long timeout) {
         if (this.isClosed.get()) {
             callback.onError(createError(CLOSED_PIPE_ERROR));
-        } else if (timeout == -1) {
+        } else if (timeout <= -1) {
             callback.onError(createError(NEGATIVE_TIMEOUT_ERROR));
         } else {
             this.isClosed.compareAndSet(false, true);
