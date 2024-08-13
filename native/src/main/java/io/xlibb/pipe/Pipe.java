@@ -91,7 +91,7 @@ public class Pipe {
         this.timeKeeper = new Observable(null, null);
     }
 
-    public static void generatePipeWithTimer(BObject pipe, Long limit, BObject timer) {
+    public static void generatePipe(BObject pipe, Long limit, BObject timer) {
         pipe.addNativeData(PIPE_OBJECT, new Pipe(limit, timer));
     }
 
