@@ -247,7 +247,7 @@ public class Pipe {
     protected void asyncClose(Callback callback, long timeout) {
         if (this.isClosed.get()) {
             callback.onError(createError(CLOSED_PIPE_ERROR));
-        } else if (timeout <= -1) {
+        } else if (timeout == -1) {
             callback.onError(createError(NEGATIVE_TIMEOUT_ERROR));
         } else {
             this.isClosed.compareAndSet(false, true);
