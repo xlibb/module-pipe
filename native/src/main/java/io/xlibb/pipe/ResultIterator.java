@@ -38,27 +38,29 @@ public class ResultIterator {
     }
 
     public static Object nextValue(Environment env, BObject streamGenerator, BTypedesc typeParam) {
+        Future future = env.markAsync();
         Pipe pipe = (Pipe) streamGenerator.getNativeData(NATIVE_PIPE);
         if (pipe != null) {
-            Future future = env.markAsync();
             Callback observer = new Callback(future, pipe.getProducer(), pipe.getTimeKeeper(), pipe.getConsumer());
             long timeout = (long) streamGenerator.getNativeData(TIME_OUT);
             pipe.asyncConsume(observer, timeout, typeParam.getDescribingType());
-            return null;
+        } else {
+            future.complete(createError(PRODUCE_TO_CLOSED_PIPE_ERROR));
         }
-        return createError(PRODUCE_TO_CLOSED_PIPE_ERROR);
+        return null;
     }
 
     public static BError close(Environment env, BObject streamGenerator) {
+        Future future = env.markAsync();
         long timeOut = (long) streamGenerator.getNativeData(TIME_OUT);
         Pipe pipe = ((Pipe) streamGenerator.getNativeData(NATIVE_PIPE));
         if (pipe == null) {
-            return createError(CLOSED_PIPE_ERROR);
+            future.complete(createError(CLOSED_PIPE_ERROR));
+        } else {
+            Callback observer = new Callback(future, null, null, null);
+            pipe.asyncClose(observer, timeOut);
+            streamGenerator.addNativeData(NATIVE_PIPE, null);
         }
-        Future future = env.markAsync();
-        Callback observer = new Callback(future, null, null, null);
-        pipe.asyncClose(observer, timeOut);
-        streamGenerator.addNativeData(NATIVE_PIPE, null);
         return null;
     }
 }

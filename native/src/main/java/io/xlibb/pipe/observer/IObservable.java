@@ -2,6 +2,8 @@ package io.xlibb.pipe.observer;
 
 import io.ballerina.runtime.api.values.BError;
 
+import java.util.concurrent.locks.ReentrantLock;
+
 /**
  * Abstract APIs for Observable class.
  */
@@ -10,9 +12,9 @@ public interface IObservable {
 
     public void unregisterObserver(Callback o);
 
-    public void notifyObservers(Object object);
+    public void notifyObservers(Object object, ReentrantLock lock);
 
-    public void notifyObservers();
+    public void notifyObservers(ReentrantLock lock);
 
     public void notifyObservers(BError bError, Callback callback);
 

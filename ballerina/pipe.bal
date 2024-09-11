@@ -35,8 +35,9 @@ public isolated class Pipe {
         'class: "io.xlibb.pipe.Pipe",
         paramTypes: ["java.lang.Long"]
     } external;
-    
+
     public isolated function generatePipeWithTimer(int 'limit, Timer timer) = @java:Method {
+        name: "generatePipe",
         'class: "io.xlibb.pipe.Pipe",
         paramTypes: ["java.lang.Long", "io.ballerina.runtime.api.values.BObject"]
     } external;
@@ -99,12 +100,3 @@ public isolated class Pipe {
         'class: "io.xlibb.pipe.Pipe"
     } external;
 }
-
-isolated function newPipe(int 'limit) returns handle = @java:Constructor {
-    'class: "io.xlibb.pipe.Pipe"
-} external;
-
-isolated function newPipeWithTimer(int 'limit, Timer timer) returns handle = @java:Constructor {
-    'class: "io.xlibb.pipe.Pipe"
-} external;
-
