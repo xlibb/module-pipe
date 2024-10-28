@@ -67,7 +67,7 @@ public class Pipe {
     private final AtomicBoolean isClosed;
     private final AtomicInteger queueSize;
     private final Long limit;
-    private final ReentrantLock pipeLock = new ReentrantLock();
+    private final ReentrantLock pipeLock = new ReentrantLock(true);
     private final Observable consumer;
     private final Observable emptyQueue;
     private final Observable producer;
