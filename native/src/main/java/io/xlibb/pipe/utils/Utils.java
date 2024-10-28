@@ -12,7 +12,6 @@ import static io.xlibb.pipe.utils.ModuleUtils.getModule;
  */
 public class Utils {
     public static final String ERROR_TYPE = "Error";
-    public static final BString NATIVE_PIPE_OBJECT = StringUtils.fromString("nativePipeObject");
     public static final String NATIVE_PIPE = "nativePipe";
     public static final BString NATIVE_TIMER_OBJECT = StringUtils.fromString("nativeTimerObject");
     public static final String RESULT_ITERATOR = "ResultIterator";

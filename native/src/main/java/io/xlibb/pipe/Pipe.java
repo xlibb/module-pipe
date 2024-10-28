@@ -32,21 +32,16 @@ import io.ballerina.runtime.api.values.BTypedesc;
 import io.xlibb.pipe.observer.Callback;
 import io.xlibb.pipe.observer.Notifier;
 import io.xlibb.pipe.observer.Observable;
-import io.xlibb.pipe.thread.WorkerThreadPool;
 
 import java.math.BigDecimal;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static io.xlibb.pipe.ResultIterator.CLOSED_PIPE_ERROR;
-import static io.xlibb.pipe.thread.WorkerThreadPool.MAX_POOL_SIZE;
 import static io.xlibb.pipe.utils.ModuleUtils.getModule;
 import static io.xlibb.pipe.utils.Utils.NATIVE_PIPE;
 import static io.xlibb.pipe.utils.Utils.NATIVE_TIMER_OBJECT;
@@ -61,11 +56,9 @@ import static io.xlibb.pipe.utils.Utils.createError;
  */
 public class Pipe {
     private static final BDecimal MILLISECONDS_FACTOR = ValueCreator.createDecimalValue(new BigDecimal(1000));
-    private static final ExecutorService PIPE_EXECUTOR_SERVICE = new ThreadPoolExecutor(0, MAX_POOL_SIZE,
-            60L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(), new WorkerThreadPool.PipeThreadFactory(),
-            new ThreadPoolExecutor.CallerRunsPolicy());
     private static final String PRODUCE_NIL_ERROR = "Nil values must not be produced to a pipe";
     private static final String PRODUCE_TO_CLOSED_PIPE = "Events must not be produced to a closed pipe";
+    private static final String CONSUME_FROM_CLOSED_PIPE = "Events must not be consumed from a closed pipe";
     private static final String NEGATIVE_TIMEOUT_ERROR = "Graceful close must provide a timeout of 0 or greater";
     private static final String TIMEOUT_ERROR = "Timeout must be -1 or greater. Provided: %s";
     private static final String INVALID_TIMEOUT_ERROR = "Invalid timeout value provided";
@@ -74,8 +67,7 @@ public class Pipe {
     private final AtomicBoolean isClosed;
     private final AtomicInteger queueSize;
     private final Long limit;
-    private final Object consumeLock = new Object();
-    private final Object produceLock = new Object();
+    private final ReentrantLock pipeLock = new ReentrantLock(true);
     private final Observable consumer;
     private final Observable emptyQueue;
     private final Observable producer;
@@ -99,7 +91,7 @@ public class Pipe {
         this.timeKeeper = new Observable(null, null);
     }
 
-    public static void generatePipeWithTimer(BObject pipe, Long limit, BObject timer) {
+    public static void generatePipe(BObject pipe, Long limit, BObject timer) {
         pipe.addNativeData(PIPE_OBJECT, new Pipe(limit, timer));
     }
 
@@ -130,7 +122,7 @@ public class Pipe {
             Pipe nativePipe = (Pipe) pipe.getNativeData(PIPE_OBJECT);
             Callback observer = new Callback(future, nativePipe.getConsumer(), nativePipe.getTimeKeeper(),
                     nativePipe.getProducer());
-            PIPE_EXECUTOR_SERVICE.execute(() -> nativePipe.asyncProduce(observer, event, timeoutInMillis));
+            nativePipe.asyncProduce(observer, event, timeoutInMillis);
         } catch (BError bError) {
             future.complete(createError(INVALID_TIMEOUT_ERROR, bError));
         } catch (Exception e) {
@@ -146,9 +138,8 @@ public class Pipe {
             Pipe nativePipe = (Pipe) pipe.getNativeData(PIPE_OBJECT);
             Callback observer = new Callback(future, nativePipe.getProducer(), nativePipe.getTimeKeeper(),
                     nativePipe.getConsumer());
-            PIPE_EXECUTOR_SERVICE.execute(() -> {
-                nativePipe.asyncConsume(observer, timeoutInMillis, typeParam.getDescribingType());
-            });
+            observer.setType(typeParam.getDescribingType());
+            nativePipe.asyncConsume(observer, timeoutInMillis, typeParam.getDescribingType());
         } catch (BError bError) {
             future.complete(createError(INVALID_TIMEOUT_ERROR, bError));
         } catch (Exception e) {
@@ -163,7 +154,7 @@ public class Pipe {
             long timeoutInMillis = getTimeoutInMillis(timeout);
             Pipe nativePipe = (Pipe) pipe.getNativeData(PIPE_OBJECT);
             Callback observer = new Callback(future, null, null, null);
-            PIPE_EXECUTOR_SERVICE.execute(() -> nativePipe.asyncClose(observer, timeoutInMillis));
+            nativePipe.asyncClose(observer, timeoutInMillis);
         } catch (BError bError) {
             future.complete(createError(INVALID_TIMEOUT_ERROR, bError));
         } catch (Exception e) {
@@ -191,40 +182,50 @@ public class Pipe {
             callback.onError(createError(PRODUCE_TO_CLOSED_PIPE));
             return;
         }
-        synchronized (this.produceLock) {
+        this.pipeLock.lock();
+        try {
             if (this.queueSize.get() == this.limit) {
                 callback.setEvent(event);
                 this.consumer.registerObserver(callback);
                 this.scheduleAction(callback, timeout);
             } else {
-                queue.add(event);
                 queueSize.incrementAndGet();
-                this.producer.notifyObservers(event);
+                queue.add(event);
+                this.producer.notifyObservers(event, this.pipeLock);
                 callback.onSuccess(null);
             }
+        } catch (Exception e) {
+            callback.onError(createError(e.getMessage()));
+        } finally {
+            this.pipeLock.unlock();
         }
     }
 
     protected void asyncConsume(Callback callback, long timeout, Type type) {
-        if (this.queue == null) {
-            callback.onSuccess(null);
+        if (this.isClosed.get()) {
+            callback.onError(createError(CONSUME_FROM_CLOSED_PIPE));
             return;
         }
-        synchronized (this.consumeLock) {
+        this.pipeLock.lock();
+        try {
             if (this.queueSize.get() == 0) {
                 this.emptyQueue.notifyObservers(true);
                 this.producer.registerObserver(callback);
                 this.scheduleAction(callback, timeout);
             } else {
+                queueSize.decrementAndGet();
+                Object value = queue.remove();
+                this.consumer.notifyObservers(this.pipeLock);
                 try {
-                    queueSize.decrementAndGet();
-                    this.consumer.notifyObservers();
-                    Object value = ValueUtils.convert(queue.remove(), type);
-                    callback.onSuccess(value);
+                    callback.onSuccess(ValueUtils.convert(value, type));
                 } catch (Exception e) {
                     callback.onError(createError(e.getMessage()));
                 }
             }
+        } catch (Exception e) {
+            callback.onError(createError(e.getMessage()));
+        } finally {
+            this.pipeLock.unlock();
         }
     }
 

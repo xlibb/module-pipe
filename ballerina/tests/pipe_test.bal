@@ -80,7 +80,7 @@ function testImmediateClose() returns error? {
     check pipe.produce("1", timeout = 5);
     check pipe.immediateClose();
     Error? actualValue = pipe.consume(5);
-    test:assertTrue(actualValue is ());
+    test:assertTrue(actualValue is Error);
 }
 
 @test:Config {
@@ -93,8 +93,8 @@ function testConsumeStreamAfterClose() returns error? {
     }
     stream<int, error?> result = check pipe.consumeStream(5);
     check pipe.immediateClose();
-    var actualValue = check result.next();
-    test:assertEquals(actualValue, ());
+    record {|int value;|}|error? actualValue = result.next();
+    test:assertTrue(actualValue is error);
 }
 
 @test:Config {
@@ -109,7 +109,7 @@ function testGracefulClose() returns error? {
     test:assertTrue(actualValue is Error);
     test:assertEquals((<Error>actualValue).message(), expectedValue);
     Error? consumeValue = pipe.consume(5);
-    test:assertTrue(consumeValue is ());
+    test:assertTrue(consumeValue is Error);
 }
 
 @test:Config {
