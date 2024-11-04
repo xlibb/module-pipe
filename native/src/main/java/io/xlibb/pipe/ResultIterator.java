@@ -17,15 +17,17 @@
 package io.xlibb.pipe;
 
 import io.ballerina.runtime.api.Environment;
-import io.ballerina.runtime.api.Future;
 import io.ballerina.runtime.api.values.BError;
 import io.ballerina.runtime.api.values.BObject;
 import io.ballerina.runtime.api.values.BTypedesc;
 import io.xlibb.pipe.observer.Callback;
 
+import java.util.concurrent.CompletableFuture;
+
 import static io.xlibb.pipe.utils.Utils.NATIVE_PIPE;
 import static io.xlibb.pipe.utils.Utils.TIME_OUT;
 import static io.xlibb.pipe.utils.Utils.createError;
+import static io.xlibb.pipe.utils.Utils.getResult;
 
 /**
  * Java implementation for the APIs of the stream returned from the pipe.
@@ -38,29 +40,35 @@ public class ResultIterator {
     }
 
     public static Object nextValue(Environment env, BObject streamGenerator, BTypedesc typeParam) {
-        Future future = env.markAsync();
-        Pipe pipe = (Pipe) streamGenerator.getNativeData(NATIVE_PIPE);
-        if (pipe != null) {
-            Callback observer = new Callback(future, pipe.getProducer(), pipe.getTimeKeeper(), pipe.getConsumer());
-            long timeout = (long) streamGenerator.getNativeData(TIME_OUT);
-            pipe.asyncConsume(observer, timeout, typeParam.getDescribingType());
-        } else {
-            future.complete(createError(PRODUCE_TO_CLOSED_PIPE_ERROR));
-        }
-        return null;
+        return env.yieldAndRun(() -> {
+            CompletableFuture<Object> future = new CompletableFuture<>();
+            Pipe pipe = (Pipe) streamGenerator.getNativeData(NATIVE_PIPE);
+            if (pipe != null) {
+                Callback observer = new Callback(future, pipe.getProducer(), pipe.getTimeKeeper(), pipe.getConsumer());
+                long timeout = (long) streamGenerator.getNativeData(TIME_OUT);
+                pipe.asyncConsume(observer, timeout, typeParam.getDescribingType());
+            } else {
+                future.complete(createError(PRODUCE_TO_CLOSED_PIPE_ERROR));
+            }
+            return getResult(future);
+        });
+
     }
 
     public static BError close(Environment env, BObject streamGenerator) {
-        Future future = env.markAsync();
-        long timeOut = (long) streamGenerator.getNativeData(TIME_OUT);
-        Pipe pipe = ((Pipe) streamGenerator.getNativeData(NATIVE_PIPE));
-        if (pipe == null) {
-            future.complete(createError(CLOSED_PIPE_ERROR));
-        } else {
-            Callback observer = new Callback(future, null, null, null);
-            pipe.asyncClose(observer, timeOut);
-            streamGenerator.addNativeData(NATIVE_PIPE, null);
-        }
-        return null;
+        return (BError) env.yieldAndRun(() -> {
+            CompletableFuture<Object> future = new CompletableFuture<>();
+            long timeOut = (long) streamGenerator.getNativeData(TIME_OUT);
+            Pipe pipe = ((Pipe) streamGenerator.getNativeData(NATIVE_PIPE));
+            if (pipe == null) {
+                future.complete(createError(CLOSED_PIPE_ERROR));
+            } else {
+                Callback observer = new Callback(future, null, null, null);
+                pipe.asyncClose(observer, timeOut);
+                streamGenerator.addNativeData(NATIVE_PIPE, null);
+            }
+            return getResult(future);
+        });
+
     }
 }

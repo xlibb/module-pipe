@@ -1,11 +1,11 @@
 package io.xlibb.pipe.observer;
 
-import io.ballerina.runtime.api.Future;
 import io.ballerina.runtime.api.types.Type;
 import io.ballerina.runtime.api.utils.ValueUtils;
 import io.ballerina.runtime.api.values.BError;
 import io.xlibb.pipe.utils.Utils;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -15,7 +15,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * Callback class to get updated when a change occurs in Observables.
  */
 public class Callback implements IObserver {
-    private final Future future;
+    private final CompletableFuture<Object> future;
     private final Observable timeKeeper;
     private final Observable observable;
     private final Observable notifyObservable;
@@ -23,7 +23,8 @@ public class Callback implements IObserver {
     private Object event;
     private Type type;
 
-    public Callback(Future future, Observable observable, Observable timeKeeper, Observable notifyObservable) {
+    public Callback(CompletableFuture<Object> future, Observable observable, Observable timeKeeper,
+                    Observable notifyObservable) {
         this.future = future;
         this.timeKeeper = timeKeeper;
         this.notifyObservable = notifyObservable;
