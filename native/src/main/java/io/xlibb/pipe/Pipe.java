@@ -17,7 +17,6 @@
 package io.xlibb.pipe;
 
 import io.ballerina.runtime.api.Environment;
-import io.ballerina.runtime.api.Future;
 import io.ballerina.runtime.api.PredefinedTypes;
 import io.ballerina.runtime.api.creators.TypeCreator;
 import io.ballerina.runtime.api.creators.ValueCreator;
@@ -36,6 +35,7 @@ import io.xlibb.pipe.observer.Observable;
 import java.math.BigDecimal;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -50,6 +50,7 @@ import static io.xlibb.pipe.utils.Utils.STREAM_GENERATOR;
 import static io.xlibb.pipe.utils.Utils.TIMER;
 import static io.xlibb.pipe.utils.Utils.TIME_OUT;
 import static io.xlibb.pipe.utils.Utils.createError;
+import static io.xlibb.pipe.utils.Utils.getResult;
 
 /**
  * Provide APIs to exchange events concurrently.
@@ -116,51 +117,58 @@ public class Pipe {
     }
 
     public static BError produce(Environment env, BObject pipe, Object event, BDecimal timeout) {
-        Future future = env.markAsync();
-        try {
-            long timeoutInMillis = getTimeoutInMillis(timeout);
-            Pipe nativePipe = (Pipe) pipe.getNativeData(PIPE_OBJECT);
-            Callback observer = new Callback(future, nativePipe.getConsumer(), nativePipe.getTimeKeeper(),
-                    nativePipe.getProducer());
-            nativePipe.asyncProduce(observer, event, timeoutInMillis);
-        } catch (BError bError) {
-            future.complete(createError(INVALID_TIMEOUT_ERROR, bError));
-        } catch (Exception e) {
-            future.complete(createError(e.getMessage()));
-        }
-        return null;
+        return (BError) env.yieldAndRun(() -> {
+            CompletableFuture<Object> future = new CompletableFuture<>();
+            try {
+                long timeoutInMillis = getTimeoutInMillis(timeout);
+                Pipe nativePipe = (Pipe) pipe.getNativeData(PIPE_OBJECT);
+                Callback observer = new Callback(future, nativePipe.getConsumer(), nativePipe.getTimeKeeper(),
+                        nativePipe.getProducer());
+                nativePipe.asyncProduce(observer, event, timeoutInMillis);
+            } catch (BError bError) {
+                future.complete(createError(INVALID_TIMEOUT_ERROR, bError));
+            } catch (Exception e) {
+                future.complete(createError(e.getMessage()));
+            }
+            return getResult(future);
+        });
     }
 
     public static Object consume(Environment env, BObject pipe, BDecimal timeout, BTypedesc typeParam) {
-        Future future = env.markAsync();
-        try {
-            long timeoutInMillis = getTimeoutInMillis(timeout);
-            Pipe nativePipe = (Pipe) pipe.getNativeData(PIPE_OBJECT);
-            Callback observer = new Callback(future, nativePipe.getProducer(), nativePipe.getTimeKeeper(),
-                    nativePipe.getConsumer());
-            observer.setType(typeParam.getDescribingType());
-            nativePipe.asyncConsume(observer, timeoutInMillis, typeParam.getDescribingType());
-        } catch (BError bError) {
-            future.complete(createError(INVALID_TIMEOUT_ERROR, bError));
-        } catch (Exception e) {
-            future.complete(createError(e.getMessage()));
-        }
-        return null;
+        return env.yieldAndRun(() -> {
+            CompletableFuture<Object> future = new CompletableFuture<>();
+            try {
+                long timeoutInMillis = getTimeoutInMillis(timeout);
+                Pipe nativePipe = (Pipe) pipe.getNativeData(PIPE_OBJECT);
+                Callback observer = new Callback(future, nativePipe.getProducer(), nativePipe.getTimeKeeper(),
+                        nativePipe.getConsumer());
+                observer.setType(typeParam.getDescribingType());
+                nativePipe.asyncConsume(observer, timeoutInMillis, typeParam.getDescribingType());
+            } catch (BError bError) {
+                future.complete(createError(INVALID_TIMEOUT_ERROR, bError));
+            } catch (Exception e) {
+                future.complete(createError(e.getMessage()));
+            }
+            return getResult(future);
+        });
     }
 
     public static BError gracefulClose(Environment env, BObject pipe, BDecimal timeout) {
-        Future future = env.markAsync();
-        try {
-            long timeoutInMillis = getTimeoutInMillis(timeout);
-            Pipe nativePipe = (Pipe) pipe.getNativeData(PIPE_OBJECT);
-            Callback observer = new Callback(future, null, null, null);
-            nativePipe.asyncClose(observer, timeoutInMillis);
-        } catch (BError bError) {
-            future.complete(createError(INVALID_TIMEOUT_ERROR, bError));
-        } catch (Exception e) {
-            future.complete(createError(e.getMessage()));
-        }
-        return null;
+        return (BError) env.yieldAndRun(() -> {
+            CompletableFuture<Object> future = new CompletableFuture<>();
+            try {
+                long timeoutInMillis = getTimeoutInMillis(timeout);
+                Pipe nativePipe = (Pipe) pipe.getNativeData(PIPE_OBJECT);
+                Callback observer = new Callback(future, null, null, null);
+                nativePipe.asyncClose(observer, timeoutInMillis);
+            } catch (BError bError) {
+                future.complete(createError(INVALID_TIMEOUT_ERROR, bError));
+            } catch (Exception e) {
+                future.complete(createError(e.getMessage()));
+            }
+            return getResult(future);
+        });
+
     }
 
     private static long getTimeoutInMillis(BDecimal timeout) {
