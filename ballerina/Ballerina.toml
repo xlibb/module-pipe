@@ -1,16 +1,16 @@
 [package]
 org = "xlibb"
 name = "pipe"
-version = "1.5.0"
+version = "1.6.0"
 authors = ["xlibb"]
 keywords = ["pipe"]
 repository = "https://github.com/xlibb/module-pipe"
 license = ["Apache-2.0"]
-distribution = "2201.8.0"
+distribution = "2201.11.0"
 icon = "icon.png"
 
-[[platform.java17.dependency]]
+[[platform.java21.dependency]]
 groupId = "io.xlibb.pipe"
 artifactId = "pipe-native"
-version = "1.5.0"
-path = "../native/build/libs/pipe-native-1.5.0.jar"
+version = "1.6.0"
+path = "../native/build/libs/pipe-native-1.6.0-SNAPSHOT.jar"
