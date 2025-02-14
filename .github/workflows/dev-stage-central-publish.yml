@@ -2,6 +2,14 @@ name: Publish to the Ballerina Dev/Stage central
 
 on:
     workflow_dispatch:
+        inputs:
+            environment:
+              type: string
+              required: true
+            additional-publish-flags:
+              required: false
+              type: string
+              default: ""
 
 jobs:
     publish-release:
