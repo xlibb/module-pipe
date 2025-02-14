@@ -4,12 +4,12 @@ on:
     workflow_dispatch:
         inputs:
             environment:
-              type: string
-              required: true
-            additional-publish-flags:
-              required: false
-              type: string
-              default: ""
+                type: choice
+                description: Select environment
+                required: true
+                options:
+                  - DEV CENTRAL
+                  - STAGE CENTRAL
 
 jobs:
     publish-release:
@@ -40,7 +40,7 @@ jobs:
                     GITHUB_TOKEN: ${{ secrets.BALLERINA_BOT_TOKEN }}
                 run: |
                     sed -i 's/version=\(.*\)-SNAPSHOT/version=\1/g' gradle.properties
-                    ./gradlew clean build -PpublishToCentral=true ${{ inputs.additional-publish-flags }}
+                    ./gradlew clean build -PpublishToCentral=true
             
             -   name: Ballerina Central Stage Push
                 if: ${{ inputs.environment == 'STAGE CENTRAL' }}
@@ -53,4 +53,4 @@ jobs:
                     GITHUB_TOKEN: ${{ secrets.BALLERINA_BOT_TOKEN }}
                 run: |
                     sed -i 's/version=\(.*\)-SNAPSHOT/version=\1/g' gradle.properties
-                    ./gradlew clean build -PpublishToCentral=true ${{ inputs.additional-publish-flags }}
+                    ./gradlew clean build -PpublishToCentral=true
