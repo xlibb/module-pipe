@@ -34,3 +34,4 @@ jobs:
                     format: 'table'
                     timeout: '10m0s'
                     exit-code: '1'
+                    cache-dir: "/tmp/trivy-cache"

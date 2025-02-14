@@ -35,6 +35,7 @@ jobs:
                     timeout: "10m0s"
                     exit-code: "1"
                     scanners: "vuln"
+                    cache-dir: "/tmp/trivy-cache"
 
             -   name: Publish artifact
                 env:
