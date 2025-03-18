@@ -9,19 +9,6 @@ distribution-version = "2201.11.0"
 
 [[package]]
 org = "ballerina"
-name = "io"
-version = "1.7.0"
-scope = "testOnly"
-dependencies = [
-	{org = "ballerina", name = "jballerina.java"},
-	{org = "ballerina", name = "lang.value"}
-]
-modules = [
-	{org = "ballerina", packageName = "io", moduleName = "io"}
-]
-
-[[package]]
-org = "ballerina"
 name = "jballerina.java"
 version = "0.0.0"
 modules = [
@@ -77,15 +64,6 @@ modules = [
 
 [[package]]
 org = "ballerina"
-name = "lang.value"
-version = "0.0.0"
-scope = "testOnly"
-dependencies = [
-	{org = "ballerina", name = "jballerina.java"}
-]
-
-[[package]]
-org = "ballerina"
 name = "test"
 version = "0.0.0"
 scope = "testOnly"
@@ -115,7 +93,6 @@ org = "xlibb"
 name = "pipe"
 version = "1.6.0"
 dependencies = [
-	{org = "ballerina", name = "io"},
 	{org = "ballerina", name = "jballerina.java"},
 	{org = "ballerina", name = "lang.runtime"},
 	{org = "ballerina", name = "test"},
