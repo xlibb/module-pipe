@@ -31,6 +31,7 @@ import io.ballerina.runtime.api.values.BTypedesc;
 import io.xlibb.pipe.observer.Callback;
 import io.xlibb.pipe.observer.Notifier;
 import io.xlibb.pipe.observer.Observable;
+import io.xlibb.pipe.utils.Utils;
 
 import java.math.BigDecimal;
 import java.util.Timer;
@@ -65,6 +66,7 @@ public class Pipe {
     private static final String INVALID_TIMEOUT_ERROR = "Invalid timeout value provided";
     private static final long INFINITE_WAIT = -1;
     public static final String PIPE_OBJECT = "nativePipeObject";
+    public static final BError PIPE_CLOSED_ERROR = Utils.createError("Pipe has been closed");
     private final AtomicBoolean isClosed;
     private final AtomicInteger queueSize;
     private final Long limit;
@@ -73,6 +75,7 @@ public class Pipe {
     private final Observable emptyQueue;
     private final Observable producer;
     private final Observable timeKeeper;
+    private final Observable closure;
     private final Timer timer;
     private ConcurrentLinkedQueue<Object> queue;
 
@@ -90,6 +93,7 @@ public class Pipe {
         this.producer = new Observable(this.queue, this.queueSize);
         this.emptyQueue = new Observable(null, null);
         this.timeKeeper = new Observable(null, null);
+        this.closure = new Observable(null, null);
     }
 
     public static void generatePipe(BObject pipe, Long limit, BObject timer) {
@@ -123,7 +127,7 @@ public class Pipe {
                 long timeoutInMillis = getTimeoutInMillis(timeout);
                 Pipe nativePipe = (Pipe) pipe.getNativeData(PIPE_OBJECT);
                 Callback observer = new Callback(future, nativePipe.getConsumer(), nativePipe.getTimeKeeper(),
-                        nativePipe.getProducer());
+                        nativePipe.getProducer(), nativePipe.getCloseObservable());
                 nativePipe.asyncProduce(observer, event, timeoutInMillis);
             } catch (BError bError) {
                 future.complete(createError(INVALID_TIMEOUT_ERROR, bError));
@@ -141,7 +145,7 @@ public class Pipe {
                 long timeoutInMillis = getTimeoutInMillis(timeout);
                 Pipe nativePipe = (Pipe) pipe.getNativeData(PIPE_OBJECT);
                 Callback observer = new Callback(future, nativePipe.getProducer(), nativePipe.getTimeKeeper(),
-                        nativePipe.getConsumer());
+                        nativePipe.getConsumer(), nativePipe.getCloseObservable());
                 observer.setType(typeParam.getDescribingType());
                 nativePipe.asyncConsume(observer, timeoutInMillis, typeParam.getDescribingType());
             } catch (BError bError) {
@@ -159,7 +163,8 @@ public class Pipe {
             try {
                 long timeoutInMillis = getTimeoutInMillis(timeout);
                 Pipe nativePipe = (Pipe) pipe.getNativeData(PIPE_OBJECT);
-                Callback observer = new Callback(future, null, null, null);
+                Callback observer = new Callback(future, null, null,
+                                  null, nativePipe.getCloseObservable());
                 nativePipe.asyncClose(observer, timeoutInMillis);
             } catch (BError bError) {
                 future.complete(createError(INVALID_TIMEOUT_ERROR, bError));
@@ -194,6 +199,7 @@ public class Pipe {
         try {
             if (this.queueSize.get() == this.limit) {
                 callback.setEvent(event);
+                this.closure.registerObserver(callback);
                 this.consumer.registerObserver(callback);
                 this.scheduleAction(callback, timeout);
             } else {
@@ -219,6 +225,7 @@ public class Pipe {
             if (this.queueSize.get() == 0) {
                 this.emptyQueue.notifyObservers(true);
                 this.producer.registerObserver(callback);
+                this.closure.registerObserver(callback);
                 this.scheduleAction(callback, timeout);
             } else {
                 queueSize.decrementAndGet();
@@ -266,11 +273,13 @@ public class Pipe {
                     public void run() {
                         queue = null;
                         emptyQueue.unregisterObserver(callback);
+                        closure.notifyObservers(PIPE_CLOSED_ERROR);
                         callback.onSuccess(null);
                     }
                 }, timeout);
             } else {
                 this.queue = null;
+                closure.notifyObservers(PIPE_CLOSED_ERROR);
                 callback.onSuccess(null);
             }
         }
@@ -297,11 +306,17 @@ public class Pipe {
         return timeKeeper;
     }
 
+    protected Observable getCloseObservable() {
+        return closure;
+    }
+
+
     protected AtomicBoolean getIsClosed() {
         return this.isClosed;
     }
 
     protected void nullifyQueue() {
         this.queue = null;
+        this.closure.notifyObservers(PIPE_CLOSED_ERROR);
     }
 }

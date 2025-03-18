@@ -17,6 +17,7 @@ import java.util.concurrent.locks.ReentrantLock;
 public class Callback implements IObserver {
     private final CompletableFuture<Object> future;
     private final Observable timeKeeper;
+    private final Observable closure;
     private final Observable observable;
     private final Observable notifyObservable;
     private final AtomicBoolean atomicUpdate;
@@ -24,9 +25,10 @@ public class Callback implements IObserver {
     private Type type;
 
     public Callback(CompletableFuture<Object> future, Observable observable, Observable timeKeeper,
-                    Observable notifyObservable) {
+                    Observable notifyObservable, Observable closure) {
         this.future = future;
         this.timeKeeper = timeKeeper;
+        this.closure = closure;
         this.notifyObservable = notifyObservable;
         this.observable = observable;
         this.atomicUpdate = new AtomicBoolean(false);
@@ -45,6 +47,7 @@ public class Callback implements IObserver {
         if (atomicUpdate.compareAndSet(false, true)) {
             observable.unregisterObserver(this);
             timeKeeper.unregisterObserver(this);
+            closure.unregisterObserver(this);
             onError(bError);
         }
     }
@@ -57,6 +60,7 @@ public class Callback implements IObserver {
                 this.notifyObservable.notifyObservers(event, lock);
                 this.timeKeeper.unregisterObserver(this);
                 this.observable.unregisterObserver(this);
+                this.closure.unregisterObserver(this);
                 onSuccess(null);
             } catch (Throwable throwable) {
                 onError(Utils.createError(throwable.getMessage()));
@@ -72,10 +76,18 @@ public class Callback implements IObserver {
                 this.notifyObservable.notifyObservers(lock);
                 this.observable.unregisterObserver(this);
                 this.timeKeeper.unregisterObserver(this);
+                this.closure.unregisterObserver(this);
                 onSuccess(ValueUtils.convert(value, type));
             } catch (Throwable throwable) {
                 onError(Utils.createError(throwable.getMessage()));
             }
+        }
+    }
+
+    @Override
+    public void onClose(BError bError) {
+        if (atomicUpdate.compareAndSet(false, true)) {
+            this.onError(bError);
         }
     }
 

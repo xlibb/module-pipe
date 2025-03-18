@@ -15,6 +15,7 @@ public interface IObservable {
     public void notifyObservers(Object object, ReentrantLock lock);
 
     public void notifyObservers(ReentrantLock lock);
+    public void notifyObservers(BError bError);
 
     public void notifyObservers(BError bError, Callback callback);
 
