@@ -115,6 +115,52 @@ function testGracefulClose() returns error? {
 @test:Config {
     groups: ["close"]
 }
+function testGracefulCloseWithConsume() returns error? {
+    Pipe pipe = new(5);
+
+    worker A {
+        runtime:sleep(5);
+        Error? close = pipe.gracefulClose(timeout = 5);
+        test:assertTrue(close is ());
+    }
+    worker B {
+        Error? consumedValue = pipe.consume(20);
+        test:assertTrue(consumedValue is Error);
+        test:assertEquals((<Error>consumedValue).message(), "Pipe has been closed");
+
+        consumedValue = pipe.consume(20);
+        test:assertTrue(consumedValue is Error);
+        test:assertEquals((<Error>consumedValue).message(), "Events must not be consumed from a closed pipe");
+    }
+    wait B;
+}
+
+@test:Config {
+    groups: ["close"]
+}
+function testImmediateCloseWithConsume() returns error? {
+    Pipe pipe = new(5);
+
+    worker A {
+        runtime:sleep(5);
+        Error? close = pipe.immediateClose();
+        test:assertTrue(close is ());
+    }
+    worker B {
+        Error? consumedValue = pipe.consume(20);
+        test:assertTrue(consumedValue is Error);
+        test:assertEquals((<Error>consumedValue).message(), "Pipe has been closed");
+
+        consumedValue = pipe.consume(20);
+        test:assertTrue(consumedValue is Error);
+        test:assertEquals((<Error>consumedValue).message(), "Events must not be consumed from a closed pipe");
+    }
+    wait B;
+}
+
+@test:Config {
+    groups: ["close"]
+}
 function testIsClosedInPipe() returns error? {
     Pipe pipe = new(5);
     test:assertTrue(!pipe.isClosed());
