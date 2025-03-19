@@ -16,6 +16,7 @@ public interface IObserver {
     void onConsume(ConcurrentLinkedQueue<Object> queue, AtomicInteger queueSize, ReentrantLock lock);
 
     void onProduce(ConcurrentLinkedQueue<Object> queue, AtomicInteger queueSize, ReentrantLock lock);
+    void onClose(BError bError);
 
     void onError(BError bError);
 

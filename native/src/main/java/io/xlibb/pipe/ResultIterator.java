@@ -44,7 +44,8 @@ public class ResultIterator {
             CompletableFuture<Object> future = new CompletableFuture<>();
             Pipe pipe = (Pipe) streamGenerator.getNativeData(NATIVE_PIPE);
             if (pipe != null) {
-                Callback observer = new Callback(future, pipe.getProducer(), pipe.getTimeKeeper(), pipe.getConsumer());
+                Callback observer = new Callback(future, pipe.getProducer(), pipe.getTimeKeeper(), pipe.getConsumer(),
+                                                 pipe.getCloseObservable());
                 long timeout = (long) streamGenerator.getNativeData(TIME_OUT);
                 pipe.asyncConsume(observer, timeout, typeParam.getDescribingType());
             } else {
@@ -63,7 +64,8 @@ public class ResultIterator {
             if (pipe == null) {
                 future.complete(createError(CLOSED_PIPE_ERROR));
             } else {
-                Callback observer = new Callback(future, null, null, null);
+                Callback observer = new Callback(future, null, null, null,
+                                                 pipe.getCloseObservable());
                 pipe.asyncClose(observer, timeOut);
                 streamGenerator.addNativeData(NATIVE_PIPE, null);
             }

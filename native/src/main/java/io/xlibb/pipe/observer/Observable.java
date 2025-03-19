@@ -46,6 +46,13 @@ public class Observable implements IObservable {
     }
 
     @Override
+    public void notifyObservers(BError bError) {
+        for (Callback callback: callbackList) {
+            callback.onClose(bError);
+        }
+    }
+
+    @Override
     public void notifyObservers(BError bError, Callback callback) {
         callbackList.remove(callback);
         callback.onTimeout(bError);
