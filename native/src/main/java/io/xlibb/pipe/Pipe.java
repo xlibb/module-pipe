@@ -309,8 +309,7 @@ public class Pipe {
     protected Observable getCloseObservable() {
         return closure;
     }
-
-
+    
     protected AtomicBoolean getIsClosed() {
         return this.isClosed;
     }
